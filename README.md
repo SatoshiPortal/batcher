@@ -23,45 +23,9 @@ All of this makes you spend up to 80% less on transaction fees overall. The hot 
 
 ## Concept and workflow
 
-### Batching schedule
+### Creating and editing atching schedule
 
 Create a batching schedule via the configs. You can opt for an amount based (e.g. everytime the batch reaches at least 0.5 Bitcoin) or by frequency (e.g. execute the current batches ever 4 hours). We recommend you opting for both (e.g. execute the batch every time the amount exceeds 1 Bitcoin or every hour, whichever comes first).
-
-#### Batch management info via the API
-
-reloadConfig, getConfig
-
-Request: N/A
-
-Response:
-
-```TypeScript
-{
-  result?: {
-    LOG: string;
-    BASE_DIR: string;
-    DATA_DIR: string;
-    DB_NAME: string;
-    URL_SERVER: string;
-    URL_PORT: number;
-    URL_CTX_WEBHOOKS: string;
-    SESSION_TIMEOUT: number;
-    CN_URL: string;
-    CN_API_ID: string;
-    CN_API_KEY: string;
-    CN_MQTT_BROKER: string;
-    DEFAULT_BATCHER_ID: number;
-    BATCH_TIMEOUT_MINUTES: number;
-    BATCH_THRESHOLD_AMOUNT: number;
-  },
-  error?: {
-    code: number;
-    message: string;
-    data?: D;
-  }
-}
-```
-#### Batching configs
 
 Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3d0d8d655fecd59cce69c32a0cfb/src/config/BatcherConfig.ts
 
@@ -83,7 +47,6 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 - In the API response, you get the time of the next batch. You can notify the user that the batch will be executed at the latest at that time (and possibly earlier).
 
 Because of the nature of Bitcoin transaction, the end result will be to create a much smaller amount of slightly bigger transactions.
-
 
 # Technical docs
 
