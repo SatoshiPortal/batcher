@@ -1,4 +1,4 @@
-Created by Kexkey and Francis from bullbitcoin.com 
+Created by Kexkey and Francis from bullbitcoin.com
 
 ## batcher cypherapp API intro
 
