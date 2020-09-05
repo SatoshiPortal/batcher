@@ -44,6 +44,7 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 ### API Workflow
 - `Add to batch`: submit a Bitcoin address and amount of a payment to a batching queue via API.
 - For each payment (output + amount) you should add a callback URL that will receive the webhook notification when the transaction is sent (0-conf) and/or confirmed (1-conf). This is useful for notifying users that their withdrawal has been processed. You will receive detailed transaction info.
+- You can remove a payment from a batch at any time, for example if the user wants to have an instant withdrawal. We would suggest to then send the Bitcoin using the normal `sendtoaddress` API call. To make the end-user pay for the transaction fee instead of you (for example as a premium for opting out of transaction) you can subtract the fee from the amount.
 - Specify which batching schedule you want that payment to be queued in when submitting Bitcoin payments to the Batcher API. You may want to have different batching schedules, some more frequent than others, and some with lower confirmation targets (lower fees) than others.
 
 #### Adding a Bitcoin payment to a batch via API
