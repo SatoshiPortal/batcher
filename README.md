@@ -31,10 +31,14 @@ Create a batching schedule via the configuration file. You can opt for :
 - We recommend using both. For example, execute the batch every time the amount exceeds 1 Bitcoin or every hour, whichever comes first.
 
 Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3d0d8d655fecd59cce69c32a0cfb/src/config/BatcherConfig.ts
-`BATCH_TIMEOUT_MINUTES`: set this as the maximum frequency. If the threshold amount is not reached it will execute regardless at this frequency.
-`CHECK_THRESHOLD_MINUTES`: frequency of checking the threshold.
-`BATCH_THRESHOLD_AMOUNT`: the target batch threshold. When  this amount is reached, the batch will be executed as a Bitcoin  transaction. If it is not reached, the batch will be executed at  according to the batch timeout setting.
-`BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions.
+
+- `BATCH_TIMEOUT_MINUTES`: set this as the maximum frequency. If the threshold amount is not reached it will execute regardless at this frequency.
+
+- `CHECK_THRESHOLD_MINUTES`: frequency of checking the threshold.
+
+- `BATCH_THRESHOLD_AMOUNT`: the target batch threshold. When  this amount is reached, the batch will be executed as a Bitcoin  transaction. If it is not reached, the batch will be executed at  according to the batch timeout setting.
+
+- `BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions.
 
 
 ### API Workflow
