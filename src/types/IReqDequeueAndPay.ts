@@ -4,4 +4,5 @@ export default interface IReqDequeueAndPay {
   amount?: number;
   confTarget?: number;
   replaceable?: boolean;
+  subtractfeefromamount?: boolean;
 }

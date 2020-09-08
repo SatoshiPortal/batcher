@@ -422,6 +422,7 @@ Request:
   amount?: number;
   confTarget?: number;
   replaceable?: boolean;
+  subtractfeefromamount?: boolean;
 }
 ```
 
