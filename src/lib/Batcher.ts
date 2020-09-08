@@ -440,6 +440,7 @@ class Batcher {
           amount,
           confTarget: dequeueAndPayReq.confTarget,
           replaceable: dequeueAndPayReq.replaceable,
+          subtractfeefromamount: true,
         };
 
         const spendResp: IRespSpend = await this._cyphernodeClient.spend(
