@@ -363,7 +363,9 @@ Response:
       nbOutputs?: number;
       oldest?: Date;
       total?: number;
-    }
+    },
+    address: string,
+    amount: number
   }
   error?: {
     code: number;
@@ -379,7 +381,7 @@ Request:
 
 ```TypeScript
 {
-    batchRequestId: number;
+  batchRequestId: number;
 }
 ```
 
@@ -397,6 +399,64 @@ Response:
       nbOutputs?: number;
       oldest?: Date;
       total?: number;
+    },
+    address: string,
+    amount: number
+  }
+  error?: {
+    code: number;
+    message: string;
+    data?: D;
+  }
+}
+```
+
+### dequeueAndPay
+
+Request:
+
+```TypeScript
+{
+  batchRequestId: number;
+  address?: string;
+  amount?: number;
+  confTarget?: number;
+  replaceable?: boolean;
+}
+```
+
+Response:
+
+```TypeScript
+{
+  result?: {
+    batchRequest: {
+      batchRequestId: number;
+      batchId: number;
+      cnResult: {
+        batcherId?: number;
+        batcherLabel?: string;
+        outputId?: number;
+        nbOutputs?: number;
+        oldest?: Date;
+        total?: number;
+      },
+      address: string,
+      amount: number
+    }
+    spendResult: {
+      txid?: string;
+      hash?: string;
+      details?: {
+        address: string;
+        amount: number;
+        firstseen: Date;
+        size: number;
+        vsize: number;
+        replaceable: boolean;
+        fee: number;
+        subtractfeefromamount: boolean;
+      };
     }
   }
   error?: {

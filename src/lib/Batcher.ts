@@ -23,6 +23,11 @@ import IRespExecuteBatch from "../types/IRespExecuteBatch";
 import IReqAddToBatch from "../types/cyphernode/IReqAddToBatch";
 import { Utils } from "./Utils";
 import { Scheduler } from "./Scheduler";
+import IReqDequeueAndPay from "../types/IReqDequeueAndPay";
+import IRespDequeueAndPay from "../types/IRespDequeueAndPay";
+import IRespSpend from "../types/cyphernode/IRespSpend";
+import IReqSpend from "../types/cyphernode/IReqSpend";
+import { DequeueAndPayValidator } from "../validators/DequeueAndPayValidator";
 
 class Batcher {
   private _batcherConfig: BatcherConfig;
@@ -270,6 +275,8 @@ class Batcher {
           batchRequestId: batchRequest.batchRequestId,
           etaSeconds: this._scheduler.getTimeLeft(),
           cnResult: addToBatchResp.result,
+          address: batchRequest.address,
+          amount: batchRequest.amount,
         };
       } else if (addToBatchResp.error) {
         // There was an error on Cyphernode end, return that.
@@ -370,6 +377,8 @@ class Batcher {
           batchRequestId: batchRequestId,
           etaSeconds: this._scheduler.getTimeLeft(),
           cnResult: removeFromBatchResp.result,
+          address: batchRequest.address,
+          amount: batchRequest.amount,
         };
 
         await this._batcherDB.removeRequest(batchRequest);
@@ -393,6 +402,74 @@ class Batcher {
         message: "Batch request does not exist",
       };
     }
+    return response;
+  }
+
+  async dequeueAndPay(
+    dequeueAndPayReq: IReqDequeueAndPay
+  ): Promise<IRespDequeueAndPay> {
+    logger.info("Batcher.dequeueAndPay", dequeueAndPayReq);
+
+    const response: IRespDequeueAndPay = {};
+
+    if (DequeueAndPayValidator.validateRequest(dequeueAndPayReq)) {
+      const dequeueResp = await this.dequeueFromNextBatch(
+        dequeueAndPayReq.batchRequestId
+      );
+
+      if (dequeueResp?.error) {
+        // Could not dequeue request from batch
+        logger.debug(
+          "Batcher.dequeueAndPay, could not dequeue request from batch."
+        );
+
+        response.error = {
+          code: ErrorCodes.InternalError,
+          message: "Could not dequeue request from batch",
+        };
+      } else if (dequeueResp?.result) {
+        const address = dequeueAndPayReq.address
+          ? dequeueAndPayReq.address
+          : dequeueResp.result.address;
+        const amount = dequeueAndPayReq.amount
+          ? dequeueAndPayReq.amount
+          : dequeueResp.result.amount;
+
+        const spendRequestTO: IReqSpend = {
+          address,
+          amount,
+          confTarget: dequeueAndPayReq.confTarget,
+          replaceable: dequeueAndPayReq.replaceable,
+        };
+
+        const spendResp: IRespSpend = await this._cyphernodeClient.spend(
+          spendRequestTO
+        );
+
+        if (spendResp?.error) {
+          // There was an error on Cyphernode end, return that.
+          logger.debug(
+            "Batcher.dequeueAndPay: There was an error on Cyphernode end, return that."
+          );
+
+          response.error = spendResp.error;
+        } else if (spendResp?.result) {
+          response.result = {
+            batchRequest: dequeueResp.result,
+            spendResult: spendResp.result,
+          };
+        }
+      }
+    } else {
+      // There is an error with inputs
+      logger.debug("Batcher.dequeueAndPay: There is an error with inputs.");
+
+      response.error = {
+        code: ErrorCodes.InvalidRequest,
+        message: "Invalid arguments",
+      };
+    }
+
     return response;
   }
 

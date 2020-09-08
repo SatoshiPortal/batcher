@@ -12,6 +12,8 @@ import IReqGetBatchDetails from "../types/cyphernode/IReqGetBatchDetails";
 import IRespBatchSpend from "../types/cyphernode/IRespBatchSpend";
 import IReqAddToBatch from "../types/cyphernode/IReqAddToBatch";
 import { IResponseError } from "../types/jsonrpc/IResponseMessage";
+import IReqSpend from "../types/cyphernode/IReqSpend";
+import IRespSpend from "../types/cyphernode/IRespSpend";
 
 class CyphernodeClient {
   private baseURL: string;
@@ -209,23 +211,6 @@ class CyphernodeClient {
 
     // http://192.168.122.152:8080/elements_gettransaction/af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648
     return await this._get("/elements_gettransaction/" + txid);
-  }
-
-  async spend(
-    btcaddr: string,
-    amnt: number,
-    confTarget: number
-  ): Promise<unknown> {
-    logger.info(
-      "CyphernodeClient.spend: %s, %f, %d",
-      btcaddr,
-      amnt,
-      confTarget
-    );
-
-    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"confTarget":4}
-    const data = { address: btcaddr, amount: amnt, confTarget: confTarget };
-    return await this._post("/spend", data);
   }
 
   async elementsSpend(
@@ -479,6 +464,56 @@ class CyphernodeClient {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: { message: response.data } as IResponseError<any>,
       } as IRespBatchSpend;
+    }
+    return result;
+  }
+
+  async spend(spendTO: IReqSpend): Promise<IRespSpend> {
+    // POST http://192.168.111.152:8080/spend
+    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"confTarget":6,"replaceable":true,"subtractfeefromamount":false}
+
+    // args:
+    // - address, required, desination address
+    // - amount, required, amount to send to the destination address
+    // - confTarget, optional, overrides default value, default Bitcoin Core conf_target will be used if not supplied
+    // - replaceable, optional, overrides default value, default Bitcoin Core walletrbf will be used if not supplied
+    // - subtractfeefromamount, optional, if true will subtract fee from the amount sent instead of adding to it
+    //
+    // response:
+    // - txid, the transaction txid
+    // - hash, the transaction hash
+    // - tx details: address, aount, firstseen, size, vsize, replaceable, fee, subtractfeefromamount
+    //
+    // {"result":{
+    //    "status":"accepted",
+    //    "txid":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648",
+    //    "hash":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648",
+    //    "details":{
+    //      "address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp",
+    //      "amount":0.00233,
+    //      "firstseen":123123,
+    //      "size":424,
+    //      "vsize":371,
+    //      "replaceable":true,
+    //      "fee":0.00004112,
+    //      "subtractfeefromamount":true
+    //    }
+    //  }
+    // },"error":null}
+    //
+    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233}
+
+    logger.info("CyphernodeClient.spend: %s", spendTO);
+
+    let result: IRespSpend;
+    const response = await this._post("/spend", spendTO);
+    if (response.status >= 200 && response.status < 400) {
+      result = { result: response.data.result };
+    } else {
+      result = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        error: { message: response.data } as IResponseError<any>,
+      } as IRespSpend;
     }
     return result;
   }

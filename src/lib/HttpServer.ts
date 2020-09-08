@@ -16,6 +16,8 @@ import IReqGetBatchDetails from "../types/IReqGetBatchDetails";
 import IReqExecuteBatch from "../types/IReqExecuteBatch";
 import IRespExecuteBatch from "../types/IRespExecuteBatch";
 import { Batch } from "../entity/Batch";
+import IRespDequeueAndPay from "../types/IRespDequeueAndPay";
+import IReqDequeueAndPay from "../types/IReqDequeueAndPay";
 
 class HttpServer {
   // Create a new express application instance
@@ -67,6 +69,15 @@ class HttpServer {
     logger.debug("batchRequestId: %d", batchRequestId);
 
     return await this._batcher.dequeueFromNextBatch(batchRequestId);
+  }
+
+  async dequeueAndPay(params: object | undefined): Promise<IRespDequeueAndPay> {
+    logger.debug("/dequeueAndPay params: %s", params);
+
+    const reqDequeueAndPay: IReqDequeueAndPay = params as IReqDequeueAndPay;
+    logger.debug("reqDequeueAndPay: %s", reqDequeueAndPay);
+
+    return await this._batcher.dequeueAndPay(reqDequeueAndPay);
   }
 
   async getBatchDetails(
@@ -126,6 +137,15 @@ class HttpServer {
 
         case "dequeueFromNextBatch": {
           const result: IRespBatchRequest = await this.dequeueFromNextBatch(
+            reqMessage.params || {}
+          );
+          response.result = result.result;
+          response.error = result.error;
+          break;
+        }
+
+        case "dequeueAndPay": {
+          const result: IRespDequeueAndPay = await this.dequeueAndPay(
             reqMessage.params || {}
           );
           response.result = result.result;
