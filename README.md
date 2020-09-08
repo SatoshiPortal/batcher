@@ -38,12 +38,12 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 
 - `BATCH_THRESHOLD_AMOUNT`: the target batch threshold. When  this amount is reached, the batch will be executed as a Bitcoin  transaction. If it is not reached, the batch will be executed at  according to the batch timeout setting.
 
-- `BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions.
+- `BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions. You can override this when you call `executeBatch`
 
 
 ### API Workflow
 - `Add to batch`: submit a Bitcoin address and amount of a payment to a batching queue via API.
-- For each payment (output + amount) you should add a callback URL that will receive the webhook notification when the transaction is sent (0-conf) and/or confirmed (1-conf). This is useful for notifying users that their withdrawal has been processed. You will receive detailed transaction info.
+- For each payment (output + amount) you should add a callback URL that will receive the webhook notification when the transaction is sent (0-conf). This is useful for notifying users that their withdrawal has been processed. You will receive detailed transaction info.
 - You can remove a payment from a batch at any time, for example if the user wants to have an instant withdrawal. We would suggest to then send the Bitcoin using the normal `sendtoaddress` API call. To make the end-user pay for the transaction fee instead of you (for example as a premium for opting out of transaction) you can subtract the fee from the amount.
 - Specify which batching schedule you want that payment to be queued in when submitting Bitcoin payments to the Batcher API. You may want to have different batching schedules, some more frequent than others, and some with lower confirmation targets (lower fees) than others.
 
@@ -78,8 +78,8 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 
 - In the API response above, you get the time of the next batch etaSeconds. You can notify the user that the batch will be executed at the latest at that time (and possibly earlier).
 - If multiple payments are being made to a single Bitcoin address, batcher will aggregate the amounts and make a single payment to that Bitcoin address. This is not optional because Bitcoin Core would otherwise reject the transaction.
-- Once the amount or expiry time thresholds have been reached, Batcher will dispatch a request to the Bitcoin Core instance running in cyphernode to create and broadcast the transaction using the "send multi" Bitcoin Core RPC call.
-- In the API webhook notification, you will receive the information related to each Bitcoin payment as if it had been its own transaction. The transaction fees will have been adujsted "pro-rata" for each Bitcoin payment. This is meant to keep retro-compatibility with existing Cyphernode users which, when swtiching to batching, will not have to do anything else than call the new Batcher API instead of the "spend" API in Cyphernode.
+- Once the amount or expiry time thresholds have been reached, Batcher will dispatch a request to the Bitcoin Core instance running in cyphernode to create and broadcast the transaction using the `sendmany` Bitcoin Core RPC call.
+- In the API webhook notification, you will receive the information related to each Bitcoin payment as if it had been its own transaction (see below).
 
 #### Webhook notification sent to all the callback URLs submitted with payments to a batch
 
