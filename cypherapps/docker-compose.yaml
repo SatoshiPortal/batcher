@@ -10,6 +10,7 @@ services:
     volumes:
       - "$APP_SCRIPT_PATH/data:/batcher/data"
       - "$GATEKEEPER_DATAPATH/certs/cert.pem:/batcher/cert.pem:ro"
+      - "$LOGS_DATAPATH:/batcher/logs"
     networks:
       - cyphernodeappsnet
     restart: always
