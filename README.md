@@ -42,6 +42,8 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 
 **Sample configs**
 
+This is Batcher 1. Batches every 60 minutes or whenever the batch reaches 1 BTC (whichever is soonest). Check every minute. The conf target is 6 blocks. 
+
 ```
 {
     "LOG": "DEBUG",
@@ -56,12 +58,13 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
     "CN_API_ID": "003",
     "CN_API_KEY": "39b83c35972aeb81a242bfe189dc0a22da5ac6cbb64072b492f2d46519a97618",
     "DEFAULT_BATCHER_ID": 1,
-    "BATCH_TIMEOUT_MINUTES": 5,
+    "BATCH_TIMEOUT_MINUTES": 60,
     "CHECK_THRESHOLD_MINUTES": 1,
-    "BATCH_THRESHOLD_AMOUNT": 0.1,
+    "BATCH_THRESHOLD_AMOUNT": 1,
     "BATCH_CONF_TARGET": 6
 }
 ```
+
 
 ### API Workflow
 - `Add to batch`: submit a Bitcoin address and amount of a payment to a batching queue via API.
