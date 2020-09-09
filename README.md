@@ -8,6 +8,10 @@ Cypherapps can be conceived as cyphernode "plugins". Running a Cyphernode instan
 
 Batcher is currently implemented in the Bull Bitcoin exchange
 
+#### Note for devs
+To use Batcher, you must use the features/batching branch of Cyphernode, which will be merged into Cyphernode 0.5 (upcoming)
+https://github.com/SatoshiPortal/cyphernode/tree/features/batching
+
 ### Benefits 
 
 - Significantly lower transaction fee expenses
