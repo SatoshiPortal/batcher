@@ -40,6 +40,28 @@ Edit the config here https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be3
 
 - `BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions. You can override this when you call `executeBatch`
 
+**Sample configs**
+
+```
+{
+    "LOG": "DEBUG",
+    "BASE_DIR": "/batcher",
+    "DATA_DIR": "data",
+    "DB_NAME": "batcher.sqlite",
+    "URL_SERVER": "http://batcher",
+    "URL_PORT": 8000,
+    "URL_CTX_WEBHOOKS": "webhooks",
+    "SESSION_TIMEOUT": 600,
+    "CN_URL": "https://gatekeeper:2009/v0",
+    "CN_API_ID": "003",
+    "CN_API_KEY": "39b83c35972aeb81a242bfe189dc0a22da5ac6cbb64072b492f2d46519a97618",
+    "DEFAULT_BATCHER_ID": 1,
+    "BATCH_TIMEOUT_MINUTES": 5,
+    "CHECK_THRESHOLD_MINUTES": 1,
+    "BATCH_THRESHOLD_AMOUNT": 0.1,
+    "BATCH_CONF_TARGET": 6
+}
+```
 
 ### API Workflow
 - `Add to batch`: submit a Bitcoin address and amount of a payment to a batching queue via API.
