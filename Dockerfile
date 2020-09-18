@@ -1,13 +1,19 @@
-FROM node:13.3.0-alpine3.10
+FROM node:14.11.0-alpine3.11
 
 WORKDIR /batcher
 
-RUN apk add --update --no-cache \
-  sqlite
+COPY package.json /batcher
 
-COPY ./package.json /batcher
-RUN npm install
-COPY ./ /batcher
+RUN apk add --update --no-cache --virtual .gyp \
+  python \
+  make \
+  g++ \
+ && npm install \
+ && apk del .gyp
+
+COPY tsconfig.json /batcher
+COPY src /batcher/src
+
 RUN npm run build
 
 EXPOSE 9229 3000

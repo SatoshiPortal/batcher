@@ -608,7 +608,7 @@ class Batcher {
     let response: IResponseMessage = {} as IResponseMessage;
 
     brs.forEach(async (br) => {
-      if (br.webhookUrl) {
+      if (br.webhookUrl && !br.calledback) {
         const postdata = {
           batchRequestId: br.batchRequestId,
           batchId: br.batch.batchId,
