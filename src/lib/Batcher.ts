@@ -99,12 +99,18 @@ class Batcher {
         batch = await this._batcherDB.getBatchByRequest(
           getBatchDetailsTO.batchRequestId
         );
-      } else {
+      } else if (getBatchDetailsTO.batchId) {
         logger.debug("Batcher.getBatchDetails, getting Batch By Batch ID.");
 
         batch = await this._batcherDB.getBatch(
           getBatchDetailsTO.batchId as number
         );
+      } else {
+        logger.debug(
+          "Batcher.getBatchDetails, getting ongoing batch on default batcher."
+        );
+
+        batch = await this.getOngoingBatch();
       }
 
       if (batch) {
@@ -309,7 +315,10 @@ class Batcher {
     return response;
   }
 
-  async getOngoingBatch(batcherId: number, createNew: boolean): Promise<Batch> {
+  async getOngoingBatch(
+    batcherId?: number,
+    createNew?: boolean
+  ): Promise<Batch> {
     logger.info("Batcher.getOngoingBatch, batcherId: %d", batcherId);
 
     // Let's see if there's already an ongoing batch.  If not, we create one.
@@ -449,15 +458,23 @@ class Batcher {
 
         if (spendResp?.error) {
           // There was an error on Cyphernode end, return that.
+          // Note: If the spend fails, the output will be dequeued from the batch and the client must deal with reexecuting the spend.
           logger.debug(
-            "Batcher.dequeueAndPay: There was an error on Cyphernode end, return that."
+            "Batcher.dequeueAndPay: There was an error on Cyphernode spend."
           );
 
-          response.error = spendResp.error;
-        } else if (spendResp?.result) {
           response.result = {
             batchRequest: dequeueResp.result,
-            spendResult: spendResp.result,
+            spendResult: { error: spendResp.error },
+          };
+        } else if (spendResp?.result) {
+          logger.debug(
+            "Batcher.dequeueAndPay: Cyphernode spent: ",
+            spendResp.result
+          );
+          response.result = {
+            batchRequest: dequeueResp.result,
+            spendResult: { result: spendResp.result },
           };
         }
       }
@@ -506,9 +523,7 @@ class Batcher {
           "Batcher.executeBatch: Spend ongoing batch on default batcher"
         );
 
-        batchToSpend = await this._batcherDB.getOngoingBatchByBatcherId(
-          this._batcherConfig.DEFAULT_BATCHER_ID
-        );
+        batchToSpend = await this.getOngoingBatch();
       }
 
       if (batchToSpend) {

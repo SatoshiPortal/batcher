@@ -275,13 +275,13 @@ curl -d '{"id":1,"method":"queueForNextBatch","params":{"address":"bcrt1q0jrfsg9
 ### Remove from batch (replace batchRequestId value by the one you got with above command)
 
 ```bash
-curl -d '{"id":1,"method":"dequeueFromNextBatch","params":{"batchRequestId":18}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+curl -d '{"id":1,"method":"dequeueFromNextBatch","params":{"batchRequestId":8}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
 ```
 
 ### Check the result and see that the removed output is absent (replace batchId value by the one you got with first command)
 
 ```bash
-curl -d '{"id":1,"method":"getBatchDetails","params":{"batchId":3}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+curl -d '{"id":1,"method":"getBatchDetails"}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
 ```
 
 ### Add to batch exactly the same output as first
@@ -293,7 +293,7 @@ curl -d '{"id":1,"method":"queueForNextBatch","params":{"address":"bcrt1q0jrfsg9
 ### Check the result and see that the added output is there (replace batchRequestId value by the one you got with above command)
 
 ```bash
-curl -d '{"id":1,"method":"getBatchDetails","params":{"batchRequestId":19}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+curl -d '{"id":1,"method":"getBatchDetails"}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
 ```
 
 ### Add to batch for the same destination address
@@ -305,7 +305,7 @@ curl -d '{"id":1,"method":"queueForNextBatch","params":{"address":"bcrt1q0jrfsg9
 ### Check the details and see the merged outputs by looking at the cnOutputId fields have the same value (...)
 
 ```bash
-curl -d '{"id":1,"method":"getBatchDetails","params":{"batchRequestId":20}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+curl -d '{"id":1,"method":"getBatchDetails"}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
 ```
 
 ### Add to batch again for another address
@@ -317,7 +317,25 @@ curl -d '{"id":1,"method":"queueForNextBatch","params":{"address":"bcrt1qgg7uag4
 ### Check the details with new output (...)
 
 ```bash
-curl -d '{"id":1,"method":"getBatchDetails","params":{"batchRequestId":21}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+curl -d '{"id":1,"method":"getBatchDetails"}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+```
+
+### Add to batch once again for another address
+
+```bash
+curl -d '{"id":1,"method":"queueForNextBatch","params":{"address":"bcrt1qwuacwtj8l7y74ty4y3hjjf825ycp0pnwgsq9xp","amount":0.0004,"webhookUrl":"http://webhookserver:1111/indiv"}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+```
+
+### Check the details with the new output (...)
+
+```bash
+curl -d '{"id":1,"method":"getBatchDetails"}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+```
+
+### Let's dequeueAndPay the output before the last one
+
+```bash
+curl -d '{"id":1,"method":"dequeueAndPay","params":{"batchRequestId":21,"confTarget":4}}' -H "Content-Type: application/json" -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
 ```
 
 ### Execute the batch!  The resulting tx should have 3 outputs: the 2 batched requests and the change output
@@ -413,6 +431,8 @@ Response:
 
 ### dequeueAndPay
 
+Note: If the spend fails, the output will be dequeued from the batch and the client must deal with reexecuting the spend.
+
 Request:
 
 ```TypeScript
@@ -441,23 +461,30 @@ Response:
         nbOutputs?: number;
         oldest?: Date;
         total?: number;
-      },
+      };
       address: string,
       amount: number
     }
     spendResult: {
-      txid?: string;
-      hash?: string;
-      details?: {
-        address: string;
-        amount: number;
-        firstseen: Date;
-        size: number;
-        vsize: number;
-        replaceable: boolean;
-        fee: number;
-        subtractfeefromamount: boolean;
+      result?: {
+        txid?: string;
+        hash?: string;
+        details?: {
+          address: string;
+          amount: number;
+          firstseen: Date;
+          size: number;
+          vsize: number;
+          replaceable: boolean;
+          fee: number;
+          subtractfeefromamount: boolean;
+        }
       };
+      error?: {
+        code: number;
+        message: string;
+        data?: D;
+      }
     }
   }
   error?: {

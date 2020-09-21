@@ -8,7 +8,12 @@ class Utils {
     addedOptions?: unknown
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
-    logger.info("Utils._post %s %s %s", url, postdata, addedOptions);
+    logger.info(
+      "Utils._post %s %s %s",
+      url,
+      JSON.stringify(postdata),
+      addedOptions
+    );
 
     let configs: AxiosRequestConfig = {
       baseURL: url,
@@ -21,7 +26,7 @@ class Utils {
 
     try {
       const response = await axios.request(configs);
-      logger.debug("response.data = %s", response.data);
+      logger.debug("response.data = %s", JSON.stringify(response.data));
 
       return { status: response.status, data: response.data };
     } catch (error) {
