@@ -451,7 +451,7 @@ Response:
 ```TypeScript
 {
   result?: {
-    batchRequest: {
+    dequeueResult: {
       batchRequestId: number;
       batchId: number;
       cnResult: {

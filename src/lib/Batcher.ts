@@ -464,7 +464,7 @@ class Batcher {
           );
 
           response.result = {
-            batchRequest: dequeueResp.result,
+            dequeueResult: dequeueResp.result,
             spendResult: { error: spendResp.error },
           };
         } else if (spendResp?.result) {
@@ -473,7 +473,7 @@ class Batcher {
             spendResp.result
           );
           response.result = {
-            batchRequest: dequeueResp.result,
+            dequeueResult: dequeueResp.result,
             spendResult: { result: spendResp.result },
           };
         }

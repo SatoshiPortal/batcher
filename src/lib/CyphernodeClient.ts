@@ -98,7 +98,7 @@ class CyphernodeClient {
         // that falls out of the range of 2xx
         logger.info(
           "CyphernodeClient._post :: error.response.data = %s",
-          error.response.data
+          JSON.stringify(error.response.data)
         );
         logger.info(
           "CyphernodeClient._post :: error.response.status = %d",
@@ -163,7 +163,7 @@ class CyphernodeClient {
         // that falls out of the range of 2xx
         logger.info(
           "CyphernodeClient._get :: error.response.data = %s",
-          error.response.data
+          JSON.stringify(error.response.data)
         );
         logger.info(
           "CyphernodeClient._get :: error.response.status = %d",
