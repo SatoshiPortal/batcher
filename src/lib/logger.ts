@@ -12,7 +12,7 @@ const options: winston.LoggerOptions = {
   ],
   format: winston.format.combine(
     format.splat(),
-    format.colorize(),
+    // format.colorize(),
     format.timestamp(),
     format.simple(),
     format.metadata()
