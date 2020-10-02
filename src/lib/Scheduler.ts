@@ -40,7 +40,7 @@ class Scheduler {
         "/api",
       postdata
     ).then((res) => {
-      logger.debug("Scheduler.timeout, res=%s", res);
+      logger.debug("Scheduler.timeout, res=%s", JSON.stringify(res));
     });
   }
 
@@ -102,7 +102,10 @@ class Scheduler {
                 "/api",
               postdata
             ).then((res) => {
-              logger.debug("Scheduler.checkThreshold, res=%s", res);
+              logger.debug(
+                "Scheduler.checkThreshold, res=%s",
+                JSON.stringify(res)
+              );
             });
           }
         }

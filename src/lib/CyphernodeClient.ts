@@ -11,7 +11,9 @@ import IReqBatchSpend from "../types/cyphernode/IReqBatchSpend";
 import IReqGetBatchDetails from "../types/cyphernode/IReqGetBatchDetails";
 import IRespBatchSpend from "../types/cyphernode/IRespBatchSpend";
 import IReqAddToBatch from "../types/cyphernode/IReqAddToBatch";
-import { IResponseError } from "../types/jsonrpc/IResponseMessage";
+import { IResponseError, ErrorCodes } from "../types/jsonrpc/IResponseMessage";
+import IReqSpend from "../types/cyphernode/IReqSpend";
+import IRespSpend from "../types/cyphernode/IRespSpend";
 
 class CyphernodeClient {
   private baseURL: string;
@@ -84,28 +86,43 @@ class CyphernodeClient {
 
     try {
       const response = await axios.request(configs);
-      logger.debug("response.data = %s", response.data);
+      logger.debug(
+        "CyphernodeClient._post :: response.data = %s",
+        JSON.stringify(response.data)
+      );
 
       return { status: response.status, data: response.data };
     } catch (error) {
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
-        logger.info("error.response.data = %s", error.response.data);
-        logger.info("error.response.status = %d", error.response.status);
-        logger.info("error.response.headers = %s", error.response.headers);
+        logger.info(
+          "CyphernodeClient._post :: error.response.data = %s",
+          JSON.stringify(error.response.data)
+        );
+        logger.info(
+          "CyphernodeClient._post :: error.response.status = %d",
+          error.response.status
+        );
+        logger.info(
+          "CyphernodeClient._post :: error.response.headers = %s",
+          error.response.headers
+        );
 
         return { status: error.response.status, data: error.response.data };
       } else if (error.request) {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
-        logger.info("error.message = %s", error.message);
+        logger.info(
+          "CyphernodeClient._post :: error.message = %s",
+          error.message
+        );
 
         return { status: -1, data: error.message };
       } else {
         // Something happened in setting up the request that triggered an Error
-        logger.info("Error: %s", error.message);
+        logger.info("CyphernodeClient._post :: Error: %s", error.message);
 
         return { status: -2, data: error.message };
       }
@@ -134,163 +151,47 @@ class CyphernodeClient {
 
     try {
       const response = await axios.request(configs);
-      logger.debug("response.data = %s", response.data);
+      logger.debug(
+        "CyphernodeClient._get :: response.data = %s",
+        JSON.stringify(response.data)
+      );
 
       return { status: response.status, data: response.data };
     } catch (error) {
       if (error.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
-        logger.info("error.response.data = %s", error.response.data);
-        logger.info("error.response.status = %d", error.response.status);
-        logger.info("error.response.headers = %s", error.response.headers);
+        logger.info(
+          "CyphernodeClient._get :: error.response.data = %s",
+          JSON.stringify(error.response.data)
+        );
+        logger.info(
+          "CyphernodeClient._get :: error.response.status = %d",
+          error.response.status
+        );
+        logger.info(
+          "CyphernodeClient._get :: error.response.headers = %s",
+          error.response.headers
+        );
 
         return { status: error.response.status, data: error.response.data };
       } else if (error.request) {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
-        logger.info("error.message = %s", error.message);
+        logger.info(
+          "CyphernodeClient._get :: error.message = %s",
+          error.message
+        );
 
         return { status: -1, data: error.message };
       } else {
         // Something happened in setting up the request that triggered an Error
-        logger.info("Error: %s", error.message);
+        logger.info("CyphernodeClient._get :: Error: %s", error.message);
 
         return { status: -2, data: error.message };
       }
     }
-  }
-
-  async watch(
-    btcaddr: string,
-    cb0conf: string,
-    cb1conf: string
-  ): Promise<unknown> {
-    logger.info(
-      "CyphernodeClient.watch: %s, %s, %s",
-      btcaddr,
-      cb0conf,
-      cb1conf
-    );
-
-    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","unconfirmedCallbackURL":"192.168.122.233:1111/callback0conf","confirmedCallbackURL":"192.168.122.233:1111/callback1conf"}
-    const data = {
-      address: btcaddr,
-      unconfirmedCallbackURL: cb0conf,
-      confirmedCallbackURL: cb1conf,
-    };
-    return await this._post("/watch", data);
-  }
-
-  async unwatch(btcaddr: string): Promise<unknown> {
-    logger.info("CyphernodeClient.unwatch: %s", btcaddr);
-
-    // 192.168.122.152:8080/unwatch/2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp
-    return await this._get("/unwatch/" + btcaddr);
-  }
-
-  async getActiveWatches(): Promise<unknown> {
-    logger.info("CyphernodeClient.getActiveWatches");
-
-    // 192.168.122.152:8080/getactivewatches
-    return await this._get("/getactivewatches");
-  }
-
-  async getTransaction(txid: string): Promise<unknown> {
-    logger.info("CyphernodeClient.getTransaction: %s", txid);
-
-    // http://192.168.122.152:8080/gettransaction/af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648
-    return await this._get("/gettransaction/" + txid);
-  }
-
-  async getElementsTransaction(txid: string): Promise<unknown> {
-    logger.info("CyphernodeClient.getElementsTransactionSync: %s", txid);
-
-    // http://192.168.122.152:8080/elements_gettransaction/af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648
-    return await this._get("/elements_gettransaction/" + txid);
-  }
-
-  async spend(
-    btcaddr: string,
-    amnt: number,
-    confTarget: number
-  ): Promise<unknown> {
-    logger.info(
-      "CyphernodeClient.spend: %s, %f, %d",
-      btcaddr,
-      amnt,
-      confTarget
-    );
-
-    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"confTarget":4}
-    const data = { address: btcaddr, amount: amnt, confTarget: confTarget };
-    return await this._post("/spend", data);
-  }
-
-  async elementsSpend(
-    addr: string,
-    amnt: number,
-    confTarget: number,
-    assetId: string
-  ): Promise<unknown> {
-    logger.info(
-      "CyphernodeClient.elementsSpend: %s, %f, %d, %s",
-      addr,
-      amnt,
-      confTarget,
-      assetId
-    );
-
-    // BODY {"address":"AzpmavTHCTfJhUqoS28kg3aTmCzu9uqCdfkqmpCALetAoa3ERpZnHvhNzjMP3wo4XitKEMm62mjFk7B9","amount":0.00233,"confTarget":4,"assetId":"b2e15d0d7a0c94e4e2ce0fe6e8691b9e451377f6e46e8045a86f7c4b5d4f0f23"}
-    const data = {
-      address: addr,
-      amount: amnt,
-      confTarget: confTarget,
-      assetId: assetId,
-    };
-    return await this._post("/elements_spend", data);
-  }
-
-  async getBalance(): Promise<unknown> {
-    logger.info("CyphernodeClient.getBalance");
-
-    // http://192.168.122.152:8080/getbalance
-    return await this._get("/getbalance");
-  }
-
-  async getNewAddress(): Promise<unknown> {
-    logger.info("CyphernodeClient.getNewAddress");
-
-    // http://192.168.122.152:8080/getnewaddress
-    return await this._get("/getnewaddress");
-  }
-
-  async getWasabiNewAddress(label: string): Promise<unknown> {
-    logger.info("CyphernodeClient.wasabiGetNewAddress");
-
-    // POST https://cyphernode/wasabi_getnewaddress
-    // BODY {"label":"Pay #12 for 2018"}
-    const data = { label };
-    return await this._post("/wasabi_getnewaddress", data);
-  }
-
-  async otsStamp(hash: string, callbackUrl: string): Promise<unknown> {
-    logger.info("CyphernodeClient.ots_stamp: %s, %s", hash, callbackUrl);
-
-    // POST https://cyphernode/ots_stamp
-    // BODY {"hash":"1ddfb769eb0b8876bc570e25580e6a53afcf973362ee1ee4b54a807da2e5eed7","callbackUrl":"192.168.111.233:1111/callbackUrl"}
-    const data = { hash: hash, callbackUrl: callbackUrl };
-    return await this._post("/ots_stamp", data);
-  }
-
-  async otsGetfile(hash: string): Promise<unknown> {
-    logger.info("CyphernodeClient.ots_getfile: %s", hash);
-
-    // http://192.168.122.152:8080/ots_getfile/1ddfb769eb0b8876bc570e25580e6a53afcf973362ee1ee4b54a807da2e5eed7
-
-    // encoding: null is for HTTP get to not convert the binary data to the default encoding
-    return await this._get("/ots_getfile/" + hash, { encoding: null });
   }
 
   async addToBatch(batchRequestTO: IReqAddToBatch): Promise<IRespAddToBatch> {
@@ -324,8 +225,11 @@ class CyphernodeClient {
       result = { result: response.data.result };
     } else {
       result = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: { message: response.data } as IResponseError<any>,
+        error: {
+          code: response.data.error.code,
+          message: response.data.error.message,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as IResponseError<any>,
       } as IRespBatchSpend;
     }
     return result;
@@ -357,8 +261,11 @@ class CyphernodeClient {
       result = { result: response.data.result };
     } else {
       result = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: { message: response.data } as IResponseError<any>,
+        error: {
+          code: response.data.error.code,
+          message: response.data.error.message,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as IResponseError<any>,
       } as IRespBatchSpend;
     }
     return result;
@@ -413,8 +320,11 @@ class CyphernodeClient {
       result = { result: response.data.result };
     } else {
       result = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: { message: response.data } as IResponseError<any>,
+        error: {
+          code: response.data.error.code,
+          message: response.data.error.message,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as IResponseError<any>,
       } as IRespBatchSpend;
     }
     return result;
@@ -476,9 +386,65 @@ class CyphernodeClient {
       result = { result: response.data.result };
     } else {
       result = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error: { message: response.data } as IResponseError<any>,
+        error: {
+          code: response.data.error.code,
+          message: response.data.error.message,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as IResponseError<any>,
       } as IRespBatchSpend;
+    }
+    return result;
+  }
+
+  async spend(spendTO: IReqSpend): Promise<IRespSpend> {
+    // POST http://192.168.111.152:8080/spend
+    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"confTarget":6,"replaceable":true,"subtractfeefromamount":false}
+
+    // args:
+    // - address, required, desination address
+    // - amount, required, amount to send to the destination address
+    // - confTarget, optional, overrides default value, default Bitcoin Core conf_target will be used if not supplied
+    // - replaceable, optional, overrides default value, default Bitcoin Core walletrbf will be used if not supplied
+    // - subtractfeefromamount, optional, if true will subtract fee from the amount sent instead of adding to it
+    //
+    // response:
+    // - txid, the transaction txid
+    // - hash, the transaction hash
+    // - tx details: address, aount, firstseen, size, vsize, replaceable, fee, subtractfeefromamount
+    //
+    // {"result":{
+    //    "status":"accepted",
+    //    "txid":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648",
+    //    "hash":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648",
+    //    "details":{
+    //      "address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp",
+    //      "amount":0.00233,
+    //      "firstseen":123123,
+    //      "size":424,
+    //      "vsize":371,
+    //      "replaceable":true,
+    //      "fee":0.00004112,
+    //      "subtractfeefromamount":true
+    //    }
+    //  }
+    // },"error":null}
+    //
+    // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233}
+
+    logger.info("CyphernodeClient.spend: %s", spendTO);
+
+    let result: IRespSpend;
+    const response = await this._post("/spend", spendTO);
+    if (response.status >= 200 && response.status < 400) {
+      result = { result: response.data };
+    } else {
+      result = {
+        error: {
+          code: ErrorCodes.InternalError,
+          message: response.data.message,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as IResponseError<any>,
+      } as IRespSpend;
     }
     return result;
   }

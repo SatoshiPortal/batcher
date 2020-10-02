@@ -5,4 +5,6 @@ export default interface IBatchRequestResult {
   batchId: number;
   etaSeconds: number;
   cnResult: IAddToBatchResult;
+  address: string;
+  amount: number;
 }

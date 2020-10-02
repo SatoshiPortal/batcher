@@ -23,6 +23,11 @@ import IRespExecuteBatch from "../types/IRespExecuteBatch";
 import IReqAddToBatch from "../types/cyphernode/IReqAddToBatch";
 import { Utils } from "./Utils";
 import { Scheduler } from "./Scheduler";
+import IReqDequeueAndPay from "../types/IReqDequeueAndPay";
+import IRespDequeueAndPay from "../types/IRespDequeueAndPay";
+import IRespSpend from "../types/cyphernode/IRespSpend";
+import IReqSpend from "../types/cyphernode/IReqSpend";
+import { DequeueAndPayValidator } from "../validators/DequeueAndPayValidator";
 
 class Batcher {
   private _batcherConfig: BatcherConfig;
@@ -94,12 +99,18 @@ class Batcher {
         batch = await this._batcherDB.getBatchByRequest(
           getBatchDetailsTO.batchRequestId
         );
-      } else {
+      } else if (getBatchDetailsTO.batchId) {
         logger.debug("Batcher.getBatchDetails, getting Batch By Batch ID.");
 
         batch = await this._batcherDB.getBatch(
           getBatchDetailsTO.batchId as number
         );
+      } else {
+        logger.debug(
+          "Batcher.getBatchDetails, getting ongoing batch on default batcher."
+        );
+
+        batch = await this.getOngoingBatch();
       }
 
       if (batch) {
@@ -270,6 +281,8 @@ class Batcher {
           batchRequestId: batchRequest.batchRequestId,
           etaSeconds: this._scheduler.getTimeLeft(),
           cnResult: addToBatchResp.result,
+          address: batchRequest.address,
+          amount: batchRequest.amount,
         };
       } else if (addToBatchResp.error) {
         // There was an error on Cyphernode end, return that.
@@ -302,7 +315,10 @@ class Batcher {
     return response;
   }
 
-  async getOngoingBatch(batcherId: number, createNew: boolean): Promise<Batch> {
+  async getOngoingBatch(
+    batcherId?: number,
+    createNew?: boolean
+  ): Promise<Batch> {
     logger.info("Batcher.getOngoingBatch, batcherId: %d", batcherId);
 
     // Let's see if there's already an ongoing batch.  If not, we create one.
@@ -370,6 +386,8 @@ class Batcher {
           batchRequestId: batchRequestId,
           etaSeconds: this._scheduler.getTimeLeft(),
           cnResult: removeFromBatchResp.result,
+          address: batchRequest.address,
+          amount: batchRequest.amount,
         };
 
         await this._batcherDB.removeRequest(batchRequest);
@@ -393,6 +411,83 @@ class Batcher {
         message: "Batch request does not exist",
       };
     }
+    return response;
+  }
+
+  async dequeueAndPay(
+    dequeueAndPayReq: IReqDequeueAndPay
+  ): Promise<IRespDequeueAndPay> {
+    logger.info("Batcher.dequeueAndPay", dequeueAndPayReq);
+
+    const response: IRespDequeueAndPay = {};
+
+    if (DequeueAndPayValidator.validateRequest(dequeueAndPayReq)) {
+      const dequeueResp = await this.dequeueFromNextBatch(
+        dequeueAndPayReq.batchRequestId
+      );
+
+      if (dequeueResp?.error) {
+        // Could not dequeue request from batch
+        logger.debug(
+          "Batcher.dequeueAndPay, could not dequeue request from batch."
+        );
+
+        response.error = {
+          code: ErrorCodes.InternalError,
+          message: "Could not dequeue request from batch",
+        };
+      } else if (dequeueResp?.result) {
+        const address = dequeueAndPayReq.address
+          ? dequeueAndPayReq.address
+          : dequeueResp.result.address;
+        const amount = dequeueAndPayReq.amount
+          ? dequeueAndPayReq.amount
+          : dequeueResp.result.amount;
+
+        const spendRequestTO: IReqSpend = {
+          address,
+          amount,
+          confTarget: dequeueAndPayReq.confTarget,
+          replaceable: dequeueAndPayReq.replaceable,
+          subtractfeefromamount: dequeueAndPayReq.subtractfeefromamount,
+        };
+
+        const spendResp: IRespSpend = await this._cyphernodeClient.spend(
+          spendRequestTO
+        );
+
+        if (spendResp?.error) {
+          // There was an error on Cyphernode end, return that.
+          // Note: If the spend fails, the output will be dequeued from the batch and the client must deal with reexecuting the spend.
+          logger.debug(
+            "Batcher.dequeueAndPay: There was an error on Cyphernode spend."
+          );
+
+          response.result = {
+            dequeueResult: dequeueResp.result,
+            spendResult: { error: spendResp.error },
+          };
+        } else if (spendResp?.result) {
+          logger.debug(
+            "Batcher.dequeueAndPay: Cyphernode spent: ",
+            spendResp.result
+          );
+          response.result = {
+            dequeueResult: dequeueResp.result,
+            spendResult: { result: spendResp.result },
+          };
+        }
+      }
+    } else {
+      // There is an error with inputs
+      logger.debug("Batcher.dequeueAndPay: There is an error with inputs.");
+
+      response.error = {
+        code: ErrorCodes.InvalidRequest,
+        message: "Invalid arguments",
+      };
+    }
+
     return response;
   }
 
@@ -428,9 +523,7 @@ class Batcher {
           "Batcher.executeBatch: Spend ongoing batch on default batcher"
         );
 
-        batchToSpend = await this._batcherDB.getOngoingBatchByBatcherId(
-          this._batcherConfig.DEFAULT_BATCHER_ID
-        );
+        batchToSpend = await this.getOngoingBatch();
       }
 
       if (batchToSpend) {
@@ -530,7 +623,7 @@ class Batcher {
     let response: IResponseMessage = {} as IResponseMessage;
 
     brs.forEach(async (br) => {
-      if (br.webhookUrl) {
+      if (br.webhookUrl && !br.calledback) {
         const postdata = {
           batchRequestId: br.batchRequestId,
           batchId: br.batch.batchId,
