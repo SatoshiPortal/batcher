@@ -47,6 +47,14 @@ class BatcherDB {
     return br as BatchRequest;
   }
 
+  async saveRequests(batchRequests: BatchRequest[]): Promise<BatchRequest[]> {
+    const brs = await this._db?.manager
+      .getRepository(BatchRequest)
+      .save(batchRequests);
+
+    return brs as BatchRequest[];
+  }
+
   async getRequest(batchRequestId: number): Promise<BatchRequest> {
     const br = await this._db?.manager
       .getRepository(BatchRequest)
