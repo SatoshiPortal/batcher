@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/SatoshiPortal/batcher#readme",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "express": "^4.17.1",
     "http-status-codes": "^1.4.0",
     "reflect-metadata": "^0.1.13",
