@@ -35,7 +35,7 @@ npm run start:dev
 Service:
 
 ```bash
-docker build -t cyphernode/batcher:v0.1.0-local .
+docker build -t cyphernode/batcher:v0.1.1-local .
 
 CYPHERNODE_DIST=~/.cyphernode/cyphernode/dist
 

@@ -83,7 +83,7 @@ class Scheduler {
 
             scheduler._startedAt = new Date().getTime();
             logger.debug(
-              "Scheduler.timeout this._startedAt = %d",
+              "Scheduler.checkThreshold this._startedAt = %d",
               scheduler._startedAt
             );
 

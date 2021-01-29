@@ -1,6 +1,7 @@
 // lib/HttpServer.ts
 import express from "express";
 import logger from "./logger";
+import AsyncLock from "async-lock";
 import BatcherConfig from "../config/BatcherConfig";
 import fs from "fs";
 import { Batcher } from "./Batcher";
@@ -22,6 +23,7 @@ import IReqDequeueAndPay from "../types/IReqDequeueAndPay";
 class HttpServer {
   // Create a new express application instance
   private readonly _httpServer: express.Application = express();
+  private readonly _lock = new AsyncLock();
   private _batcherConfig: BatcherConfig = JSON.parse(
     fs.readFileSync("data/config.json", "utf8")
   );
@@ -32,7 +34,7 @@ class HttpServer {
     this._httpServer.use(express.json());
   }
 
-  loadConfig(): void {
+  async loadConfig(): Promise<void> {
     logger.debug("loadConfig");
 
     this._batcherConfig = JSON.parse(
@@ -127,27 +129,51 @@ class HttpServer {
       // Check the method and call the corresponding function
       switch (reqMessage.method) {
         case "queueForNextBatch": {
-          const result: IRespBatchRequest = await this.queueForNextBatch(
-            reqMessage.params || {}
+          let result: IRespBatchRequest = {};
+
+          result = await this._lock.acquire(
+            "batchModif",
+            async (): Promise<IRespBatchRequest> => {
+              logger.debug("acquired lock batchModif in queueForNextBatch");
+              return await this.queueForNextBatch(reqMessage.params || {});
+            }
           );
+          logger.debug("released lock batchModif in queueForNextBatch");
+
           response.result = result.result;
           response.error = result.error;
           break;
         }
 
         case "dequeueFromNextBatch": {
-          const result: IRespBatchRequest = await this.dequeueFromNextBatch(
-            reqMessage.params || {}
+          let result: IRespBatchRequest = {};
+
+          result = await this._lock.acquire(
+            "batchModif",
+            async (): Promise<IRespBatchRequest> => {
+              logger.debug("acquired lock batchModif in dequeueFromNextBatch");
+              return await this.dequeueFromNextBatch(reqMessage.params || {});
+            }
           );
+          logger.debug("released lock batchModif in dequeueFromNextBatch");
+
           response.result = result.result;
           response.error = result.error;
           break;
         }
 
         case "dequeueAndPay": {
-          const result: IRespDequeueAndPay = await this.dequeueAndPay(
-            reqMessage.params || {}
+          let result: IRespDequeueAndPay = {};
+
+          result = await this._lock.acquire(
+            "batchModif",
+            async (): Promise<IRespDequeueAndPay> => {
+              logger.debug("acquired lock batchModif in dequeueAndPay");
+              return await this.dequeueAndPay(reqMessage.params || {});
+            }
           );
+          logger.debug("released lock batchModif in dequeueAndPay");
+
           response.result = result.result;
           response.error = result.error;
           break;
@@ -163,9 +189,17 @@ class HttpServer {
         }
 
         case "executeBatch": {
-          const result: IRespExecuteBatch = await this.executeBatch(
-            reqMessage.params || {}
+          let result: IRespExecuteBatch = {};
+
+          result = await this._lock.acquire(
+            "batchModif",
+            async (): Promise<IRespExecuteBatch> => {
+              logger.debug("acquired lock batchModif in executeBatch");
+              return await this.executeBatch(reqMessage.params || {});
+            }
           );
+          logger.debug("released lock batchModif in executeBatch");
+
           response.result = result.result;
           response.error = result.error;
           break;

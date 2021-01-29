@@ -167,7 +167,7 @@ class Batcher {
       let currentBatchRequestsTotal = 0.0;
 
       const reqAddToBatch: IReqAddToBatch = Object.assign({}, batchRequestTO);
-      reqAddToBatch.outputLabel = batchRequestTO.description;
+      let batchRequestLabel = "";
 
       if (batchRequestTO.batcherId) {
         currentBatchRequests = await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherId(
@@ -193,6 +193,7 @@ class Batcher {
 
         currentBatchRequests.forEach((currentBatchRequest) => {
           currentBatchRequestsTotal += currentBatchRequest.amount;
+          batchRequestLabel += currentBatchRequest.description + " ";
         });
 
         // First, remove the existing output in Cyphernode's batch.
@@ -204,7 +205,13 @@ class Batcher {
           currentBatchRequests[0].cnOutputId as number
         );
         if (addToBatchResp.result) {
-          reqAddToBatch.amount += currentBatchRequestsTotal;
+          reqAddToBatch.amount =
+            Math.round(
+              (reqAddToBatch.amount +
+                currentBatchRequestsTotal +
+                Number.EPSILON) *
+                1e9
+            ) / 1e9;
         }
       }
 
@@ -213,14 +220,15 @@ class Batcher {
         "Batcher.queueForNextBatch, let's now add the new output to the next Cyphernode batch and get the batcher id back."
       );
 
-      if (reqAddToBatch.webhookUrl) {
-        reqAddToBatch.webhookUrl =
-          this._batcherConfig.URL_SERVER +
-          ":" +
-          this._batcherConfig.URL_PORT +
-          "/" +
-          this._batcherConfig.URL_CTX_WEBHOOKS;
-      }
+      reqAddToBatch.outputLabel =
+        batchRequestLabel + batchRequestTO.description;
+
+      reqAddToBatch.webhookUrl =
+        this._batcherConfig.URL_SERVER +
+        ":" +
+        this._batcherConfig.URL_PORT +
+        "/" +
+        this._batcherConfig.URL_CTX_WEBHOOKS;
 
       const addToBatchResp = await this._cyphernodeClient.addToBatch(
         reqAddToBatch
@@ -255,8 +263,8 @@ class Batcher {
           currentBatchRequests.forEach((currentBatchRequest) => {
             currentBatchRequest.mergedOutput = true;
             currentBatchRequest.cnOutputId = addToBatchResp?.result?.outputId;
-            this._batcherDB.saveRequest(currentBatchRequest);
           });
+          this._batcherDB.saveRequests(currentBatchRequests);
         }
 
         // Let's see if there's already an ongoing batch.  If not, we create one.
@@ -391,6 +399,70 @@ class Batcher {
         };
 
         await this._batcherDB.removeRequest(batchRequest);
+
+        if (batchRequest.mergedOutput) {
+          // If output was merged, we need to just remove this request from the total
+          // and add new output to batch
+          logger.debug(
+            "Batcher.dequeueFromNextBatch, output was merged, let's get all requests."
+          );
+
+          let currentBatchRequestsTotal = 0.0;
+          let batchRequestLabel = "";
+          const currentBatchRequests = await this._batcherDB.getRequestsByCnOutputId(
+            batchRequest.cnOutputId
+          );
+
+          if (currentBatchRequests.length == 1) {
+            // One left, not merged anymore
+            logger.debug(
+              "Batcher.dequeueFromNextBatch, one output left after dequeue, not merged anymore."
+            );
+            currentBatchRequests[0].mergedOutput = false;
+          }
+
+          currentBatchRequests.forEach((currentBatchRequest) => {
+            currentBatchRequestsTotal += currentBatchRequest.amount;
+            batchRequestLabel += currentBatchRequest.description + " ";
+          });
+
+          const reqAddToBatch: IReqAddToBatch = {
+            amount:
+              Math.round((currentBatchRequestsTotal + Number.EPSILON) * 1e9) /
+              1e9,
+            address: batchRequest.address,
+          };
+          reqAddToBatch.outputLabel = batchRequestLabel.trim();
+          reqAddToBatch.batcherId = batchRequest.cnBatcherId;
+          reqAddToBatch.batcherLabel = batchRequest.cnBatcherLabel;
+          reqAddToBatch.webhookUrl =
+            this._batcherConfig.URL_SERVER +
+            ":" +
+            this._batcherConfig.URL_PORT +
+            "/" +
+            this._batcherConfig.URL_CTX_WEBHOOKS;
+
+          logger.debug(
+            "Batcher.dequeueFromNextBatch, now add the new output to Cyphernode batch."
+          );
+          const addToBatchResp = await this._cyphernodeClient.addToBatch(
+            reqAddToBatch
+          );
+
+          // Parse Cyphernode response
+
+          if (addToBatchResp?.result?.batcherId) {
+            // There is a result, let's create the request row in the database
+            logger.debug(
+              "Batcher.queueForNextBatch, there is a result from Cyphernode, let's update the request rows in the database"
+            );
+
+            currentBatchRequests.forEach((currentBatchRequest) => {
+              currentBatchRequest.cnOutputId = addToBatchResp?.result?.outputId;
+            });
+            this._batcherDB.saveRequests(currentBatchRequests);
+          }
+        }
       } else {
         // There was an error calling Cyphernode.
         logger.debug(
