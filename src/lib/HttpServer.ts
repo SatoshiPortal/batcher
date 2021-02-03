@@ -58,6 +58,16 @@ class HttpServer {
     const reqBatchRequest: IReqBatchRequest = params as IReqBatchRequest;
     logger.debug("reqBatchRequest: %s", reqBatchRequest);
 
+    // Convert address to lowercase only if bech32
+    const lowercased = reqBatchRequest.address.toLowerCase();
+    if (
+      lowercased.startsWith("bc") ||
+      lowercased.startsWith("tb") ||
+      lowercased.startsWith("bcrt")
+    ) {
+      reqBatchRequest.address = lowercased;
+    }
+
     return await this._batcher.queueForNextBatch(reqBatchRequest);
   }
 
@@ -78,6 +88,18 @@ class HttpServer {
 
     const reqDequeueAndPay: IReqDequeueAndPay = params as IReqDequeueAndPay;
     logger.debug("reqDequeueAndPay: %s", reqDequeueAndPay);
+
+    // Convert address to lowercase only if bech32
+    if (reqDequeueAndPay.address) {
+      const lowercased = reqDequeueAndPay.address.toLowerCase();
+      if (
+        lowercased.startsWith("bc") ||
+        lowercased.startsWith("tb") ||
+        lowercased.startsWith("bcrt")
+      ) {
+        reqDequeueAndPay.address = lowercased;
+      }
+    }
 
     return await this._batcher.dequeueAndPay(reqDequeueAndPay);
   }
