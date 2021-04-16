@@ -367,7 +367,8 @@ class Batcher {
 
     const response: IRespBatchRequest = {};
 
-    if (batchRequest?.cnOutputId) {
+    // We don't want to dequeue an already spent batch
+    if (batchRequest?.cnOutputId && !batchRequest?.batch?.txid) {
       logger.debug(
         "Batcher.dequeueFromNextBatch, cnOutputId found, remove it in Cyphernode."
       );
@@ -476,11 +477,13 @@ class Batcher {
       }
     } else {
       // Batch request not found!
-      logger.debug("Batcher.dequeueFromNextBatch, batch request not found.");
+      logger.debug(
+        "Batcher.dequeueFromNextBatch, batch request not found or already spent."
+      );
 
       response.error = {
         code: ErrorCodes.InvalidParams,
-        message: "Batch request does not exist",
+        message: "Batch request does not exist or is already spent",
       };
     }
     return response;
