@@ -511,17 +511,18 @@ Webhook BODY:
     "batchRequestId": 48,
     "batchId": 8,
     "cnBatcherId": 1,
+    "requestCountInBatch": 12,
+    "status": "accepted",
     "txid": "fc02518e32c22574158b96a513be92739ecb02d0caa463bb273e28d2efead8be",
     "hash": "fc02518e32c22574158b96a513be92739ecb02d0caa463bb273e28d2efead8be",
-    "spentDetails": {
+    "details": {
       "address": "2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp",
       "amount": 0.0001,
       "firstseen": 1584568841,
       "size": 222,
       "vsize": 141,
       "replaceable": false,
-      "fee": 0.00000141,
-      "subtractfeefromamount": false
+      "fee": 0.00000141
     }
   }
 }
