@@ -694,8 +694,8 @@ class Batcher {
       brs[0].batch.batchId
     );
 
-    let result: IResponseMessage = {} as IResponseMessage;
-    let response: IResponseMessage = {} as IResponseMessage;
+    const result: IResponseMessage = { id: webhookBody.id } as IResponseMessage;
+    let response;
 
     brs.forEach(async (br) => {
       if (br.webhookUrl && !br.calledback) {
@@ -713,20 +713,20 @@ class Batcher {
           }),
         };
         response = await Utils.post(br.webhookUrl, postdata);
-        if (response.result) {
+        if (response.status >= 200 && response.status < 400) {
+          result.result = response.data;
           br.calledback = true;
           br.calledbackTimestamp = new Date();
           this._batcherDB.saveRequest(br);
         } else {
-          result = response;
+          result.error = {
+            code: ErrorCodes.InternalError,
+            message: response.data,
+          };
         }
       }
     });
-    if (result) {
-      return result;
-    } else {
-      return response;
-    }
+    return result;
   }
 }
 
