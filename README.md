@@ -16,7 +16,7 @@ Batcher is currently implemented in the Bull Bitcoin exchange
 - Fewer change outputs
 - Smaller chains of unconfirned ancestor UTXOs
 
-All of this makes you spend up to 80% less on transaction fees overall. The hot wallets have fewer errors. It makes your on-chain non-custodial Bitcoin payout solutions seemlessly automated for optimal results according to your condigs.
+All of this makes you spend up to 80% less on transaction fees overall. The hot wallets have fewer errors. It makes your on-chain non-custodial Bitcoin payout solutions seemlessly automated for optimal results according to your configs.
 
 ### Downsides
 
@@ -39,9 +39,9 @@ Edit the config here <https://github.com/SatoshiPortal/batcher/blob/7d5fda30b5be
 
 - `CHECK_THRESHOLD_MINUTES`: frequency of checking the threshold.
 
-- `BATCH_THRESHOLD_AMOUNT`: the target batch threshold. When  this amount is reached, the batch will be executed as a Bitcoin  transaction. If it is not reached, the batch will be executed at  according to the batch timeout setting.
+- `BATCH_THRESHOLD_AMOUNT`: the target batch threshold. When this amount is reached, the batch will be executed as a Bitcoin transaction. If it is not reached, the batch will be executed according to the batch timeout setting.
 
-- `BATCH_CONF_TARGET`: when the batch is executed, this  setting will determine which network fee level the Bitcoin Core wallet  will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of  batch_conf_target of 100 for non-urgent transactions. You can override this when you call `executeBatch`
+- `BATCH_CONF_TARGET`: when the batch is executed, this setting will determine which network fee level the Bitcoin Core wallet will use for the payments. You can for example have 2 batches, one with  batch_conf_target of 6 for express withdrawals and one of batch_conf_target of 100 for non-urgent transactions. You can override this when you call `executeBatch`
 
 **Sample configs**
 
