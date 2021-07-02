@@ -23,10 +23,7 @@ Port 9229 is used to remote debug the TS app.  Optional.
 
 ```bash
 docker build -t batcher .
-docker run --rm -it -v $PWD:/usr/src/app -p 9229:9229 -p 8000:8000 --network cyphernodeappsnet -v "$HOME/.cyphernode/cyphernode/dist/cyphernode/gatekeeper/certs/cert.pem:/usr/src/app/data/cert.pem:ro" --entrypoint ash batcher
-cd /usr/src/app
-npm install
-npm run build
+docker run --rm -it -v $PWD/cypherapps/data:/batcher/data -v $PWD/logs:/batcher/logs -v $GATEKEEPER_DATAPATH/certs/cert.pem:/batcher/cert.pem:ro -p 9229:9229 -p 8000:8000 --network cyphernodeappsnet --entrypoint ash batcher
 npm run start:dev
 ```
 
