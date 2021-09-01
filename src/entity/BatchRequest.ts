@@ -12,7 +12,7 @@ import { Batch } from "./Batch";
 
 // CREATE TABLE batch_request (
 //   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   external_id INTEGER,
+//   external_id TEXT,
 //   description TEXT,
 //   address TEXT,
 //   amount REAL,
@@ -37,8 +37,8 @@ export class BatchRequest {
   batchRequestId!: number;
 
   @Index("idx_batch_request_external_id")
-  @Column({ type: "integer", name: "external_id", nullable: true })
-  externalId?: number;
+  @Column({ type: "text", name: "external_id", nullable: true })
+  externalId?: string;
 
   @Column({ type: "text", name: "description", nullable: true })
   description?: string;
