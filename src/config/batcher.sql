@@ -14,7 +14,7 @@ CREATE INDEX idx_batch_txid ON batch (txid);
 
 CREATE TABLE batch_request (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  external_id INTEGER,
+  external_id TEXT,
   description TEXT,
   address TEXT,
   amount REAL,
