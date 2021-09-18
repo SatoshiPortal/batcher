@@ -1,5 +1,5 @@
 import { HttpServer } from "./lib/HttpServer";
-import logger from "./lib/logger";
+import logger from "./lib/Log2File";
 
 const setup = async (): Promise<void> => {
   logger.debug("setup");

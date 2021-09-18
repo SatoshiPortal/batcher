@@ -1,6 +1,6 @@
 // lib/HttpServer.ts
 import express from "express";
-import logger from "./logger";
+import logger from "./Log2File";
 import AsyncLock from "async-lock";
 import BatcherConfig from "../config/BatcherConfig";
 import fs from "fs";

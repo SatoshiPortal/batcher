@@ -1,4 +1,4 @@
-import logger from "./logger";
+import logger from "./Log2File";
 import BatcherConfig from "../config/BatcherConfig";
 import { CyphernodeClient } from "./CyphernodeClient";
 import { BatcherDB } from "./BatcherDB";

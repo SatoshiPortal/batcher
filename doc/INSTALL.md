@@ -27,6 +27,13 @@ docker run --rm -it -v $PWD/cypherapps/data:/batcher/data -v $PWD/logs:/batcher/
 npm run start:dev
 ```
 
+```bash
+DOCKER_BUILDKIT=0 docker build -t batcher .
+take image before npm install
+docker run --rm -it -v "$PWD:/batcher" --entrypoint ash 627afd335255
+npm install
+```
+
 ### Deployment setup
 
 Service:
