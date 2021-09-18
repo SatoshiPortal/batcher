@@ -1,4 +1,4 @@
-import logger from "./logger";
+import logger from "./Log2File";
 import crypto from "crypto";
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import https from "https";
@@ -60,12 +60,13 @@ class CyphernodeClient {
     addedOptions?: unknown
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any> {
-    logger.info("CyphernodeClient._post %s %s %s", url, postdata, addedOptions);
+    logger.info("CyphernodeClient._post:", url, postdata, addedOptions);
 
     let configs: AxiosRequestConfig = {
       url: url,
       method: "post",
       baseURL: this.baseURL,
+      timeout: 60000,
       headers: {
         Authorization: "Bearer " + this._generateToken(),
       },
@@ -86,30 +87,26 @@ class CyphernodeClient {
 
     try {
       const response = await axios.request(configs);
-      logger.debug(
-        "CyphernodeClient._post :: response.data = %s",
-        JSON.stringify(response.data)
-      );
+      logger.debug("CyphernodeClient._post :: response.data:", response.data);
 
       return { status: response.status, data: response.data };
     } catch (err) {
-      logger.debug("CyphernodeClient._post, err:", err);
-      if (err.isAxiosError) {
+      if (axios.isAxiosError(err)) {
         const error: AxiosError = err;
 
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           logger.info(
-            "CyphernodeClient._post :: error.response.data = %s",
-            JSON.stringify(error.response.data)
+            "CyphernodeClient._post :: error.response.data:",
+            error.response.data
           );
           logger.info(
-            "CyphernodeClient._post :: error.response.status = %d",
+            "CyphernodeClient._post :: error.response.status:",
             error.response.status
           );
           logger.info(
-            "CyphernodeClient._post :: error.response.headers = %s",
+            "CyphernodeClient._post :: error.response.headers:",
             error.response.headers
           );
 
@@ -119,22 +116,16 @@ class CyphernodeClient {
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
           logger.info(
-            "CyphernodeClient._post :: error.message = %s",
+            "CyphernodeClient._post :: error.message:",
             error.message
           );
 
-          return {
-            status: -1,
-            data: { code: error.code, message: error.message },
-          };
+          return { status: -1, data: error.message };
         } else {
           // Something happened in setting up the request that triggered an Error
-          logger.info("CyphernodeClient._post :: Error: %s", error.message);
+          logger.info("CyphernodeClient._post :: Error:", error.message);
 
-          return {
-            status: -2,
-            data: { code: error.code, message: error.message },
-          };
+          return { status: -2, data: error.message };
         }
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,12 +136,13 @@ class CyphernodeClient {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async _get(url: string, addedOptions?: unknown): Promise<any> {
-    logger.info("CyphernodeClient._get %s %s", url, addedOptions);
+    logger.info("CyphernodeClient._get:", url, addedOptions);
 
     let configs: AxiosRequestConfig = {
       url: url,
       method: "get",
       baseURL: this.baseURL,
+      timeout: 30000,
       headers: {
         Authorization: "Bearer " + this._generateToken(),
       },
@@ -165,58 +157,42 @@ class CyphernodeClient {
 
     try {
       const response = await axios.request(configs);
-      logger.debug(
-        "CyphernodeClient._get :: response.data = %s",
-        JSON.stringify(response.data)
-      );
+      logger.debug("CyphernodeClient._get :: response.data:", response.data);
 
       return { status: response.status, data: response.data };
     } catch (err) {
-      logger.debug("CyphernodeClient._get, err:", err);
-      if (err.isAxiosError) {
+      if (axios.isAxiosError(err)) {
         const error: AxiosError = err;
 
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
           logger.info(
-            "CyphernodeClient._get :: error.response.data = %s",
-            JSON.stringify(error.response.data)
+            "CyphernodeClient._get :: error.response.data:",
+            error.response.data
           );
           logger.info(
-            "CyphernodeClient._get :: error.response.status = %d",
+            "CyphernodeClient._get :: error.response.status:",
             error.response.status
           );
           logger.info(
-            "CyphernodeClient._get :: error.response.headers = %s",
+            "CyphernodeClient._get :: error.response.headers:",
             error.response.headers
           );
 
-          return {
-            status: error.response.status,
-            data: error.response.data,
-          };
+          return { status: error.response.status, data: error.response.data };
         } else if (error.request) {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
-          logger.info(
-            "CyphernodeClient._get :: error.message = %s",
-            error.message
-          );
+          logger.info("CyphernodeClient._get :: error.message:", error.message);
 
-          return {
-            status: -1,
-            data: { code: error.code, message: error.message },
-          };
+          return { status: -1, data: error.message };
         } else {
           // Something happened in setting up the request that triggered an Error
-          logger.info("CyphernodeClient._get :: Error: %s", error.message);
+          logger.info("CyphernodeClient._get :: Error:", error.message);
 
-          return {
-            status: -2,
-            data: { code: error.code, message: error.message },
-          };
+          return { status: -2, data: error.message };
         }
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,7 +223,7 @@ class CyphernodeClient {
     // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"batchLabel":"lowfees","webhookUrl":"https://myCypherApp:3000/batchExecuted"}
     // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233,"batchId":34,"webhookUrl":"https://myCypherApp:3000/batchExecuted"}
 
-    logger.info("CyphernodeClient.addToBatch: %s", batchRequestTO);
+    logger.info("CyphernodeClient.addToBatch:", batchRequestTO);
 
     let result: IRespAddToBatch;
     const response = await this._post("/addtobatch", batchRequestTO);
@@ -257,8 +233,8 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.status,
-          message: response.data,
+          code: response.data.error.code,
+          message: response.data.error.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -281,7 +257,7 @@ class CyphernodeClient {
     //
     // BODY {"id":72}
 
-    logger.info("CyphernodeClient.removeFromBatch: %d", outputId);
+    logger.info("CyphernodeClient.removeFromBatch:", outputId);
 
     let result: IRespAddToBatch;
     const response = await this._post("/removefrombatch", {
@@ -293,8 +269,8 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.status,
-          message: response.data,
+          code: response.data.error.code,
+          message: response.data.error.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -342,7 +318,7 @@ class CyphernodeClient {
     // BODY {}
     // BODY {"batcherId":34}
 
-    logger.info("CyphernodeClient.getBatchDetails: %s", batchIdent);
+    logger.info("CyphernodeClient.getBatchDetails:", batchIdent);
 
     let result: IRespGetBatchDetails;
     const response = await this._post("/getbatchdetails", batchIdent);
@@ -352,8 +328,8 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.status,
-          message: response.data,
+          code: response.data.error.code,
+          message: response.data.error.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -409,7 +385,7 @@ class CyphernodeClient {
     // NOTYET BODY {"batcherLabel":"highfees","feeRate":233.7}
     // BODY {"batcherId":411,"confTarget":6}
 
-    logger.info("CyphernodeClient.batchSpend: %s", batchSpendTO);
+    logger.info("CyphernodeClient.batchSpend:", batchSpendTO);
 
     let result: IRespBatchSpend;
     const response = await this._post("/batchspend", batchSpendTO);
@@ -418,8 +394,8 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.status,
-          message: response.data,
+          code: response.data.error.code,
+          message: response.data.error.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -462,7 +438,7 @@ class CyphernodeClient {
     //
     // BODY {"address":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp","amount":0.00233}
 
-    logger.info("CyphernodeClient.spend: %s", spendTO);
+    logger.info("CyphernodeClient.spend:", spendTO);
 
     let result: IRespSpend;
     const response = await this._post("/spend", spendTO);

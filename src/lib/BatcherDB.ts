@@ -1,4 +1,4 @@
-import logger from "./logger";
+import logger from "./Log2File";
 import path from "path";
 import BatcherConfig from "../config/BatcherConfig";
 import { Batch } from "../entity/Batch";
