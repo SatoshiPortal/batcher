@@ -17,7 +17,8 @@ import IRespSpend from "../types/cyphernode/IRespSpend";
 
 class CyphernodeClient {
   private baseURL: string;
-  private readonly h64: string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9Cg==";
+  // echo -n '{"alg":"HS256","typ":"JWT"}' | basenc --base64url | tr -d '='
+  private readonly h64: string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
   private apiId: string;
   private apiKey: string;
   private caFile: string;
@@ -41,12 +42,21 @@ class CyphernodeClient {
 
     const current = Math.round(new Date().getTime() / 1000) + 10;
     const p = '{"id":"' + this.apiId + '","exp":' + current + "}";
-    const p64 = Buffer.from(p).toString("base64");
+    const re1 = /\+/g;
+    const re2 = /\//g;
+    const p64 = Buffer.from(p)
+      .toString("base64")
+      .replace(re1, "-")
+      .replace(re2, "_")
+      .split("=")[0];
     const msg = this.h64 + "." + p64;
     const s = crypto
       .createHmac("sha256", this.apiKey)
       .update(msg)
-      .digest("hex");
+      .digest("base64")
+      .replace(re1, "-")
+      .replace(re2, "_")
+      .split("=")[0];
     const token = msg + "." + s;
 
     logger.debug("CyphernodeClient._generateToken :: token=" + token);
