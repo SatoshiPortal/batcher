@@ -39,10 +39,10 @@ aarch64_docker="arm64"
 # Build amd64 and arm64 first, building for arm will trigger the manifest creation and push on hub
 
 #arch_docker=${arm_docker}
-#arch_docker=${aarch64_docker}
-arch_docker=${x86_docker}
+arch_docker=${aarch64_docker}
+#arch_docker=${x86_docker}
 
-version="v0.1.2"
+version="v0.2.0-rc.1"
 
 echo "arch_docker=$arch_docker"
 
