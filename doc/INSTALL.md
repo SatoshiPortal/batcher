@@ -39,7 +39,7 @@ npm install
 Service:
 
 ```bash
-docker build -t cyphernode/batcher:v0.1.2-local .
+docker build -t cyphernode/batcher:v0.2.0-local .
 
 CYPHERNODE_DIST=~/.cyphernode/cyphernode/dist
 
@@ -54,7 +54,7 @@ Change `$CYPHERNODE_DIST/apps/batcher/data/config.json`
 ### Rebuild and redeploy one-liner
 
 ```bash
-docker build -t cyphernode/batcher:v0.1.2-local . ; docker stop `docker ps -q -f "name=batcher"`
+docker build -t cyphernode/batcher:v0.2.0-local . ; docker stop `docker ps -q -f "name=batcher"`
 ```
 
 ## Notes
