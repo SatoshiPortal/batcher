@@ -5,8 +5,8 @@ services:
     environment:
       - "TRACING=1"
       - "CYPHERNODE_URL=https://gatekeeper:${GATEKEEPER_PORT}"
-    image: cyphernode/batcher:v0.1.2
-    entrypoint: ["npm", "run", "start:dev"]
+    image: cyphernode/batcher:v0.2.0-rc.2
+    entrypoint: [ "npm", "run", "start:dev" ]
     volumes:
       - "$APP_SCRIPT_PATH/data:/batcher/data"
       - "$GATEKEEPER_DATAPATH/certs/cert.pem:/batcher/cert.pem:ro"
