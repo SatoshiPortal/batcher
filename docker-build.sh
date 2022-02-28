@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Must be logged to docker hub:
 # docker login -u cyphernode
@@ -36,15 +36,35 @@ x86_docker="amd64"
 arm_docker="arm"
 aarch64_docker="arm64"
 
+version="v0.2.0"
+
 # Build amd64 and arm64 first, building for arm will trigger the manifest creation and push on hub
 
-#arch_docker=${arm_docker}
-#arch_docker=${aarch64_docker}
-arch_docker=${x86_docker}
+echo -e "\nBuild ${v3} for:\n"
+echo "1) AMD 64 bits (Most PCs)"
+echo "2) ARM 64 bits (RPi4, Mac M1)"
+echo "3) ARM 32 bits (RPi2-3)"
+echo -en "\nYour choice (1, 2, 3): "
+read arch_input
 
-version="v0.1.2"
+case "${arch_input}" in
+  1)
+    arch_docker=${x86_docker}
+    ;;
+  2)
+    arch_docker=${aarch64_docker}
+    ;;
+  3)
+    arch_docker=${arm_docker}
+    ;;
+  *)
+    echo "Not a valid choice."
+    exit 1
+    ;;
+esac
 
-echo "arch_docker=$arch_docker"
+echo -e "\nBuilding Batcher cypherapp\n"
+echo -e "arch_docker=$arch_docker\n"
 
 image ${arch_docker}
 
