@@ -28,7 +28,7 @@
     "express": "^4.17.1",
     "http-status-codes": "^1.4.0",
     "reflect-metadata": "^0.1.13",
-    "sqlite3": "^4.2.0",
+    "sqlite3": "^5.0.2",
     "typeorm": "^0.2.25",
     "tslog": "^3.2.0"
   },
