@@ -80,7 +80,7 @@ class Batcher {
     getBatchDetailsTO: IReqGetBatchDetails
   ): Promise<IRespGetBatchDetails> {
     logger.info(
-      "Batcher.getBatchDetails, batchRequestId: %d",
+      "Batcher.getBatchDetails, batchRequestId:",
       getBatchDetailsTO.batchRequestId
     );
 
@@ -150,7 +150,7 @@ class Batcher {
     batchRequestTO: IReqBatchRequest
   ): Promise<IRespBatchRequest> {
     logger.info(
-      "Batcher.queueForNextBatch, batchRequestTO: %s",
+      "Batcher.queueForNextBatch, batchRequestTO:",
       batchRequestTO
     );
 
@@ -210,7 +210,7 @@ class Batcher {
               (reqAddToBatch.amount +
                 currentBatchRequestsTotal +
                 Number.EPSILON) *
-                1e9
+              1e9
             ) / 1e9;
         }
       }
@@ -327,7 +327,7 @@ class Batcher {
     batcherId?: number,
     createNew?: boolean
   ): Promise<Batch> {
-    logger.info("Batcher.getOngoingBatch, batcherId: %d", batcherId);
+    logger.info("Batcher.getOngoingBatch, batcherId:", batcherId);
 
     // Let's see if there's already an ongoing batch.  If not, we create one.
 
@@ -338,8 +338,8 @@ class Batcher {
     }
     batch = await this._batcherDB.getOngoingBatchByBatcherId(batcherId);
 
-    logger.debug("Batcher.getOngoingBatch, batch: %s", batch);
-    logger.debug("Batcher.getOngoingBatch, createNew: %s", createNew);
+    logger.debug("Batcher.getOngoingBatch, batch:", batch);
+    logger.debug("Batcher.getOngoingBatch, createNew:", createNew);
 
     if (batch == null && createNew) {
       batch = new Batch();
@@ -354,7 +354,7 @@ class Batcher {
     batchRequestId: number
   ): Promise<IRespBatchRequest> {
     logger.info(
-      "Batcher.dequeueFromNextBatch, batchRequestId: %d",
+      "Batcher.dequeueFromNextBatch, batchRequestId:",
       batchRequestId
     );
 
@@ -684,7 +684,7 @@ class Batcher {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async processWebhooks(webhookBody: any): Promise<IResponseMessage> {
-    logger.info("Batcher.processWebhooks: %s", webhookBody);
+    logger.info("Batcher.processWebhooks:", webhookBody);
 
     const brs = await this._batcherDB.getRequestsByCnOutputId(
       webhookBody.outputId

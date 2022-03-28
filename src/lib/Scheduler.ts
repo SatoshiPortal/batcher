@@ -21,7 +21,7 @@ class Scheduler {
 
     scheduler._startedAt = new Date().getTime();
     logger.debug(
-      "Scheduler.timeout this._startedAt = %d",
+      "Scheduler.timeout this._startedAt =",
       scheduler._startedAt
     );
 
@@ -35,12 +35,12 @@ class Scheduler {
 
     Utils.post(
       scheduler._batcherConfig.URL_SERVER +
-        ":" +
-        scheduler._batcherConfig.URL_PORT +
-        "/api",
+      ":" +
+      scheduler._batcherConfig.URL_PORT +
+      "/api",
       postdata
     ).then((res) => {
-      logger.debug("Scheduler.timeout, res=%s", JSON.stringify(res));
+      logger.debug("Scheduler.timeout, res=", JSON.stringify(res));
     });
   }
 
@@ -48,13 +48,13 @@ class Scheduler {
     logger.info("Scheduler.getTimeLeft");
 
     const now = new Date().getTime();
-    logger.debug("Scheduler.getTimeLeft now = %d", now);
-    logger.debug("Scheduler.getTimeLeft this._startedAt = %d", this._startedAt);
+    logger.debug("Scheduler.getTimeLeft now =", now);
+    logger.debug("Scheduler.getTimeLeft this._startedAt =", this._startedAt);
 
     const delta = now - this._startedAt;
-    logger.debug("Scheduler.getTimeLeft delta = %d", delta);
+    logger.debug("Scheduler.getTimeLeft delta =", delta);
     logger.debug(
-      "Scheduler.getTimeLeft this._batcherConfig.BATCH_TIMEOUT_MINUTES * 60000 = %d",
+      "Scheduler.getTimeLeft this._batcherConfig.BATCH_TIMEOUT_MINUTES * 60000 =",
       this._batcherConfig.BATCH_TIMEOUT_MINUTES * 60000
     );
 
@@ -76,14 +76,14 @@ class Scheduler {
           ongoingBatch.batchRequests.forEach((br) => {
             total += br.amount;
           });
-          logger.debug("Scheduler.checkThreshold, total = %f", total);
+          logger.debug("Scheduler.checkThreshold, total =", total);
 
           if (total >= scheduler._batcherConfig.BATCH_THRESHOLD_AMOUNT) {
             logger.debug("Scheduler.checkThreshold, total >= threshold!");
 
             scheduler._startedAt = new Date().getTime();
             logger.debug(
-              "Scheduler.checkThreshold this._startedAt = %d",
+              "Scheduler.checkThreshold this._startedAt =",
               scheduler._startedAt
             );
 
@@ -97,13 +97,13 @@ class Scheduler {
 
             Utils.post(
               scheduler._batcherConfig.URL_SERVER +
-                ":" +
-                scheduler._batcherConfig.URL_PORT +
-                "/api",
+              ":" +
+              scheduler._batcherConfig.URL_PORT +
+              "/api",
               postdata
             ).then((res) => {
               logger.debug(
-                "Scheduler.checkThreshold, res=%s",
+                "Scheduler.checkThreshold, res=",
                 JSON.stringify(res)
               );
             });
