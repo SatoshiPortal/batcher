@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/async-lock": "^1.1.2",
     "async-lock": "^1.2.4",
-    "axios": "^0.21.1",
+    "axios": "^0.26.1",
     "express": "^4.17.1",
     "http-status-codes": "^1.4.0",
     "reflect-metadata": "^0.1.13",
