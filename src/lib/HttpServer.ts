@@ -47,7 +47,7 @@ class HttpServer {
   async queueForNextBatch(
     params: object | undefined
   ): Promise<IRespBatchRequest> {
-    logger.debug("/queueForNextBatch params: %s", params);
+    logger.debug("/queueForNextBatch params:", params);
 
     // - address, required, desination address
     // - amount, required, amount to send to the destination address
@@ -56,7 +56,7 @@ class HttpServer {
     // - webhookUrl, optional, the webhook to call when the batch is broadcast
 
     const reqBatchRequest: IReqBatchRequest = params as IReqBatchRequest;
-    logger.debug("reqBatchRequest: %s", reqBatchRequest);
+    logger.debug("reqBatchRequest:", reqBatchRequest);
 
     // Convert address to lowercase only if bech32
     const lowercased = reqBatchRequest.address.toLowerCase();
@@ -74,20 +74,20 @@ class HttpServer {
   async dequeueFromNextBatch(
     params: object | undefined
   ): Promise<IRespBatchRequest> {
-    logger.debug("/dequeueFromNextBatch params: %s", params);
+    logger.debug("/dequeueFromNextBatch params:", params);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const batchRequestId = parseInt((params as any).batchRequestId);
-    logger.debug("batchRequestId: %d", batchRequestId);
+    logger.debug("batchRequestId:", batchRequestId);
 
     return await this._batcher.dequeueFromNextBatch(batchRequestId);
   }
 
   async dequeueAndPay(params: object | undefined): Promise<IRespDequeueAndPay> {
-    logger.debug("/dequeueAndPay params: %s", params);
+    logger.debug("/dequeueAndPay params:", params);
 
     const reqDequeueAndPay: IReqDequeueAndPay = params as IReqDequeueAndPay;
-    logger.debug("reqDequeueAndPay: %s", reqDequeueAndPay);
+    logger.debug("reqDequeueAndPay:", reqDequeueAndPay);
 
     // Convert address to lowercase only if bech32
     if (reqDequeueAndPay.address) {
@@ -107,7 +107,7 @@ class HttpServer {
   async getBatchDetails(
     params: object | undefined
   ): Promise<IRespGetBatchDetails> {
-    logger.debug("/getBatchDetails params: %s", params);
+    logger.debug("/getBatchDetails params:", params);
 
     const reqGetBatchDetails: IReqGetBatchDetails = params as IReqGetBatchDetails;
 
@@ -115,7 +115,7 @@ class HttpServer {
   }
 
   async executeBatch(params: object | undefined): Promise<IRespExecuteBatch> {
-    logger.debug("/executeBatch params: %s", params);
+    logger.debug("/executeBatch params:", params);
 
     // - batcherId, optional, id of the batcher to execute, overrides batcherLabel, default batcher will be spent if not supplied
     // - batcherLabel, optional, label of the batcher to execute, default batcher will be executed if not supplied
@@ -141,8 +141,8 @@ class HttpServer {
       logger.debug("/api");
 
       const reqMessage: IRequestMessage = req.body;
-      logger.debug("reqMessage.method: %s", reqMessage.method);
-      logger.debug("reqMessage.params: %s", reqMessage.params);
+      logger.debug("reqMessage.method:", reqMessage.method);
+      logger.debug("reqMessage.params:", reqMessage.params);
 
       const response: IResponseMessage = {
         id: reqMessage.id,
@@ -261,7 +261,7 @@ class HttpServer {
       "/" + this._batcherConfig.URL_CTX_WEBHOOKS,
       async (req, res) => {
         logger.info(
-          "/" + this._batcherConfig.URL_CTX_WEBHOOKS + ": %s",
+          "/" + this._batcherConfig.URL_CTX_WEBHOOKS + ":",
           req.body
         );
 
@@ -277,7 +277,7 @@ class HttpServer {
 
     this._httpServer.listen(this._batcherConfig.URL_PORT, () => {
       logger.info(
-        "Express HTTP server listening on port %d!",
+        "Express HTTP server listening on port",
         this._batcherConfig.URL_PORT
       );
     });

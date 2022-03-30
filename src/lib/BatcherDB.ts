@@ -2,11 +2,11 @@ import logger from "./Log2File";
 import path from "path";
 import BatcherConfig from "../config/BatcherConfig";
 import { Batch } from "../entity/Batch";
-import { Connection, createConnection, IsNull } from "typeorm";
+import { DataSource, IsNull } from "typeorm";
 import { BatchRequest } from "../entity/BatchRequest";
 
 class BatcherDB {
-  private _db?: Connection;
+  private _db?: DataSource;
 
   constructor(batcherConfig: BatcherConfig) {
     this.configureDB(batcherConfig);
@@ -15,8 +15,8 @@ class BatcherDB {
   async configureDB(batcherConfig: BatcherConfig): Promise<void> {
     logger.info("BatcherDB.configureDB", batcherConfig);
 
-    if (this._db?.isConnected) {
-      await this._db.close();
+    if (this._db?.isInitialized) {
+      await this._db.destroy();
     }
     this._db = await this.initDatabase(
       path.resolve(
@@ -25,13 +25,14 @@ class BatcherDB {
         batcherConfig.DB_NAME
       )
     );
+    this._db.initialize();
   }
 
-  async initDatabase(dbName: string): Promise<Connection> {
+  async initDatabase(dbName: string): Promise<DataSource> {
     logger.info("BatcherDB.initDatabase", dbName);
 
-    return await createConnection({
-      type: "sqlite",
+    return await new DataSource({
+      type: "better-sqlite3",
       database: dbName,
       entities: [Batch, BatchRequest],
       synchronize: true,
@@ -58,7 +59,7 @@ class BatcherDB {
   async getRequest(batchRequestId: number): Promise<BatchRequest> {
     const br = await this._db?.manager
       .getRepository(BatchRequest)
-      .findOne(batchRequestId, { relations: ["batch"] });
+      .findOne({ where: { batchRequestId }, relations: ["batch"] });
 
     return br as BatchRequest;
   }
@@ -72,12 +73,12 @@ class BatcherDB {
   }
 
   async getRequestCountByBatchId(batchId: number): Promise<number> {
-    logger.info("BatcherDB.getRequestCountByBatchId, batchId: %d", batchId);
+    logger.info("BatcherDB.getRequestCountByBatchId, batchId:", batchId);
 
     const batch = await this.getBatch(batchId);
 
     if (batch && batch.batchRequests) {
-      logger.debug("Batch found: %s", batch);
+      logger.debug("Batch found:", batch);
 
       const nb = batch.batchRequests.length;
 
@@ -103,7 +104,7 @@ class BatcherDB {
   async getBatch(batchId: number): Promise<Batch> {
     const b = await this._db?.manager
       .getRepository(Batch)
-      .findOne(batchId, { relations: ["batchRequests"] });
+      .findOne({ where: { batchId }, relations: ["batchRequests"] });
 
     return b as Batch;
   }
@@ -111,27 +112,24 @@ class BatcherDB {
   async getBatchByRequest(batchRequestId: number): Promise<Batch> {
     const br = await this._db?.manager
       .getRepository(BatchRequest)
-      .findOne(batchRequestId, { relations: ["batch"] });
+      .findOne({ where: { batchRequestId }, relations: ["batch"] });
 
     const b = await this._db?.manager
       .getRepository(Batch)
-      .findOne(br?.batch.batchId, { relations: ["batchRequests"] });
+      .findOne({ where: { batchId: br?.batch.batchId }, relations: ["batchRequests"] });
 
     return b as Batch;
   }
 
   async getOngoingBatchByBatcherId(cnBatcherId: number): Promise<Batch> {
     logger.info(
-      "BatcherDB.getOngoingBatchByBatcherId, cnBatcherId: %d",
+      "BatcherDB.getOngoingBatchByBatcherId, cnBatcherId:",
       cnBatcherId
     );
 
     const b = await this._db?.manager
       .getRepository(Batch)
-      .findOne(
-        { cnBatcherId, txid: IsNull() },
-        { relations: ["batchRequests"] }
-      );
+      .findOne({ where: { cnBatcherId, txid: IsNull() }, relations: ["batchRequests"] });
 
     return b as Batch;
   }
@@ -141,8 +139,7 @@ class BatcherDB {
     cnBatcherId: number
   ): Promise<BatchRequest[]> {
     logger.info(
-      "BatcherDB.getOngoingBatchRequestsByAddressAndBatcherId, address: %s, cnBatcherId: %d",
-      address,
+      "BatcherDB.getOngoingBatchRequestsByAddressAndBatcherId, address:", address, " cnBatcherId:",
       cnBatcherId
     );
 
@@ -162,8 +159,7 @@ class BatcherDB {
     cnBatcherLabel: string
   ): Promise<BatchRequest[]> {
     logger.info(
-      "BatcherDB.getOngoingBatchRequestsByAddressAndBatcherLabel, address: %s, cnBatcherLabel: %s",
-      address,
+      "BatcherDB.getOngoingBatchRequestsByAddressAndBatcherLabel, address:", address, " cnBatcherLabel:",
       cnBatcherLabel
     );
 
