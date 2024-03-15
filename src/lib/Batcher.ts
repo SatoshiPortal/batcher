@@ -149,10 +149,7 @@ class Batcher {
   async queueForNextBatch(
     batchRequestTO: IReqBatchRequest
   ): Promise<IRespBatchRequest> {
-    logger.info(
-      "Batcher.queueForNextBatch, batchRequestTO:",
-      batchRequestTO
-    );
+    logger.info("Batcher.queueForNextBatch, batchRequestTO:", batchRequestTO);
 
     const response: IRespBatchRequest = {};
 
@@ -170,20 +167,23 @@ class Batcher {
       let batchRequestLabel = "";
 
       if (batchRequestTO.batcherId) {
-        currentBatchRequests = await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherId(
-          batchRequestTO.address,
-          batchRequestTO.batcherId
-        );
+        currentBatchRequests =
+          await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherId(
+            batchRequestTO.address,
+            batchRequestTO.batcherId
+          );
       } else if (batchRequestTO.batcherLabel) {
-        currentBatchRequests = await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherLabel(
-          batchRequestTO.address,
-          batchRequestTO.batcherLabel
-        );
+        currentBatchRequests =
+          await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherLabel(
+            batchRequestTO.address,
+            batchRequestTO.batcherLabel
+          );
       } else {
-        currentBatchRequests = await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherId(
-          batchRequestTO.address,
-          this._batcherConfig.DEFAULT_BATCHER_ID
-        );
+        currentBatchRequests =
+          await this._batcherDB.getOngoingBatchRequestsByAddressAndBatcherId(
+            batchRequestTO.address,
+            this._batcherConfig.DEFAULT_BATCHER_ID
+          );
       }
       if (currentBatchRequests.length > 0) {
         // There's already an output to this address in ongoing batch, let's merge them!
@@ -210,7 +210,7 @@ class Batcher {
               (reqAddToBatch.amount +
                 currentBatchRequestsTotal +
                 Number.EPSILON) *
-              1e9
+                1e9
             ) / 1e9;
         }
       }
@@ -373,9 +373,8 @@ class Batcher {
         "Batcher.dequeueFromNextBatch, cnOutputId found, remove it in Cyphernode."
       );
 
-      const removeFromBatchResp: IRespAddToBatch = await this._cyphernodeClient.removeFromBatch(
-        batchRequest.cnOutputId
-      );
+      const removeFromBatchResp: IRespAddToBatch =
+        await this._cyphernodeClient.removeFromBatch(batchRequest.cnOutputId);
 
       if (removeFromBatchResp.error) {
         // There was an error on Cyphernode end, return that.
@@ -410,9 +409,10 @@ class Batcher {
 
           let currentBatchRequestsTotal = 0.0;
           let batchRequestLabel = "";
-          const currentBatchRequests = await this._batcherDB.getRequestsByCnOutputId(
-            batchRequest.cnOutputId
-          );
+          const currentBatchRequests =
+            await this._batcherDB.getRequestsByCnOutputId(
+              batchRequest.cnOutputId
+            );
 
           if (currentBatchRequests.length == 1) {
             // One left, not merged anymore
@@ -628,15 +628,26 @@ class Batcher {
         confTarget: executeBatchReq.confTarget,
       };
 
-      const batchSpendResult: IRespBatchSpend = await this._cyphernodeClient.batchSpend(
-        batchSpendRequestTO
-      );
+      const batchSpendResult: IRespBatchSpend =
+        await this._cyphernodeClient.batchSpend(batchSpendRequestTO);
 
       if (batchSpendResult?.error) {
         // There was an error on Cyphernode end, return that.
-        logger.debug(
-          "Batcher.executeBatch: There was an error on Cyphernode end, return that."
-        );
+
+        if (batchSpendResult?.error?.message === "Insufficient funds") {
+          logger.debug("Batcher.executeBatch: Insufficient funds, will retry");
+        } else {
+          logger.debug(
+            "Batcher.executeBatch: SPEND ERROR, WE WILL NOT AUTOMATICALLY RETRY, MANUAL INTERVENTION FROM AN ADMIN REQUIRED ******************"
+          );
+
+          // Having something in txid will make Batcher think it's been spent, so it won't try to spend again next time.
+          batchToSpend.txid =
+            "SPEND ERROR, WE WILL NOT AUTOMATICALLY RETRY, MANUAL INTERVENTION FROM AN ADMIN REQUIRED ******************";
+        }
+
+        batchToSpend.spentDetails = JSON.stringify(batchSpendResult.error);
+        batchToSpend = await this._batcherDB.saveBatch(batchToSpend);
 
         response.error = batchSpendResult.error;
       } else if (batchSpendResult?.result) {
@@ -659,6 +670,13 @@ class Batcher {
         logger.debug(
           "Batcher.executeBatch: There was an error calling Cyphernode."
         );
+        logger.debug(
+          "Batcher.executeBatch: SPEND ERROR, WE WILL NOT AUTOMATICALLY RETRY, MANUAL INTERVENTION FROM AN ADMIN REQUIRED ******************"
+        );
+
+        batchToSpend.txid =
+          "SPEND ERROR, WE WILL NOT AUTOMATICALLY RETRY, MANUAL INTERVENTION FROM AN ADMIN REQUIRED ******************";
+        batchToSpend = await this._batcherDB.saveBatch(batchToSpend);
 
         response.error = {
           code: ErrorCodes.InvalidRequest,
