@@ -71,6 +71,18 @@ nc -vlkp1111 -e sh -c 'echo -en "HTTP/1.1 200 OK\r\n\r\n" ; timeout -t 1 tee /de
 
 ## Usage
 
+### Get current config
+
+```bash
+curl -d '{"id":1,"method":"getConfig"}' -H "Content-Type: application/json"  -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+```
+
+### Reload config
+
+```bash
+curl -d '{"id":1,"method":"reloadConfig"}' -H "Content-Type: application/json"  -k -u "<username>:<dd xxd output>" https://localhost/batcher/api | jq
+```
+
 ### Add to batch
 
 ```bash

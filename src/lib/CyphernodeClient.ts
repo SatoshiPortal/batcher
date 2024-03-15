@@ -11,7 +11,7 @@ import IReqBatchSpend from "../types/cyphernode/IReqBatchSpend";
 import IReqGetBatchDetails from "../types/cyphernode/IReqGetBatchDetails";
 import IRespBatchSpend from "../types/cyphernode/IRespBatchSpend";
 import IReqAddToBatch from "../types/cyphernode/IReqAddToBatch";
-import { IResponseError, ErrorCodes } from "../types/jsonrpc/IResponseMessage";
+import { IResponseError } from "../types/jsonrpc/IResponseMessage";
 import IReqSpend from "../types/cyphernode/IReqSpend";
 import IRespSpend from "../types/cyphernode/IRespSpend";
 
@@ -125,17 +125,20 @@ class CyphernodeClient {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
+          // Ex. of log here:
+          // CyphernodeClient._post :: error.message: timeout of 30000ms exceeded
+          // logger.info("CyphernodeClient._get :: error:", error);
           logger.info(
             "CyphernodeClient._post :: error.message:",
             error.message
           );
 
-          return { status: -1, data: error.message };
+          return { status: -1, data: { error: { code: error.code, message: error.message } } };
         } else {
           // Something happened in setting up the request that triggered an Error
           logger.info("CyphernodeClient._post :: Error:", error.message);
 
-          return { status: -2, data: error.message };
+          return { status: -2, data: { error: { code: error.code, message: error.message } } };
         }
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,14 +198,17 @@ class CyphernodeClient {
           // The request was made but no response was received
           // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
           // http.ClientRequest in node.js
+          // Ex. of log here:
+          // CyphernodeClient._post :: error.message: timeout of 30000ms exceeded
+          // logger.info("CyphernodeClient._get :: error:", error);
           logger.info("CyphernodeClient._get :: error.message:", error.message);
 
-          return { status: -1, data: error.message };
+          return { status: -1, data: { error: { code: error.code, message: error.message } } };
         } else {
           // Something happened in setting up the request that triggered an Error
           logger.info("CyphernodeClient._get :: Error:", error.message);
 
-          return { status: -2, data: error.message };
+          return { status: -2, data: { error: { code: error.code, message: error.message } } };
         }
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -243,8 +249,12 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.data.error.code,
-          message: response.data.error.message,
+          code: response.data.error
+            ? response.data.error.code
+            : response.data.code,
+          message: response.data.error
+            ? response.data.error.message
+            : response.data.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -279,8 +289,12 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.data.error.code,
-          message: response.data.error.message,
+          code: response.data.error
+            ? response.data.error.code
+            : response.data.code,
+          message: response.data.error
+            ? response.data.error.message
+            : response.data.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -338,8 +352,12 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.data.error.code,
-          message: response.data.error.message,
+          code: response.data.error
+            ? response.data.error.code
+            : response.data.code,
+          message: response.data.error
+            ? response.data.error.message
+            : response.data.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -404,8 +422,12 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: response.data.error.code,
-          message: response.data.error.message,
+          code: response.data.error
+            ? response.data.error.code
+            : response.data.code,
+          message: response.data.error
+            ? response.data.error.message
+            : response.data.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespBatchSpend;
@@ -457,8 +479,12 @@ class CyphernodeClient {
     } else {
       result = {
         error: {
-          code: ErrorCodes.InternalError,
-          message: response.data.message,
+          code: response.data.error
+            ? response.data.error.code
+            : response.data.code,
+          message: response.data.error
+            ? response.data.error.message
+            : response.data.message,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as IResponseError<any>,
       } as IRespSpend;
