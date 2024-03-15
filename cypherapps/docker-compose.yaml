@@ -1,5 +1,11 @@
 version: "3"
 
+# This is how you can generate a random authentication key:
+# server:~$ dd if=/dev/urandom bs=32 count=1 2> /dev/null | xxd -ps -c 32
+# 82b5313656818b70d900c32c3bf8ea502705048392f96a4c4f65d0e270d576fe
+# server:~$ htpasswd -bnB yourapiuser '82b5313656818b70d900c32c3bf8ea502705048392f96a4c4f65d0e270d576fe' | sed 's/\$/\$\$/g'
+# yourapiuser:$$2y$$05$$M0vR2UtI.I5JlV9Ha3j/buXwfXuyG6QqnjSBgSkkJomGaynIS1lPO
+
 services:
   batcher:
     environment:
@@ -15,12 +21,62 @@ services:
       - cyphernodeappsnet
     restart: always
     labels:
-      - "traefik.docker.network=cyphernodeappsnet"
-      - "traefik.frontend.rule=PathPrefixStrip:/batcher"
-      - "traefik.frontend.passHostHeader=true"
-      - "traefik.enable=true"
-      - "traefik.port=8000"
-      - "traefik.frontend.auth.basic.users=<username>:$$2y$$05$$LFKGjKBkmWbI5RUFBqwonOWEcen4Yu.mU139fvD3flWcP8gUqLLaC"
+      - traefik.enable=true
+      - traefik.docker.network=cyphernodeappsnet
+
+      - traefik.http.routers.batcher.rule=PathPrefix(`/batcher`)
+      - traefik.http.routers.batcher.entrypoints=websecure
+      - traefik.http.routers.batcher.tls=true
+      - traefik.http.routers.batcher.service=batcher
+      - traefik.http.routers.batcher.middlewares=batcher-redirectregex@docker,batcher-stripprefix@docker,batcher-auth@docker
+
+      # - traefik.http.routers.batcher-onion.rule=PathPrefix(`/batcher`)
+      # - traefik.http.routers.batcher-onion.entrypoints=onion
+      # - traefik.http.routers.batcher-onion.service=batcher
+      # - traefik.http.routers.batcher-onion.middlewares=batcher-redirectregex@docker,batcher-stripprefix@docker,batcher-auth@docker
+
+      - traefik.http.services.batcher.loadbalancer.server.port=8000
+      - traefik.http.services.batcher.loadbalancer.passHostHeader=true
+
+      - traefik.http.middlewares.batcher-redirectregex.redirectregex.regex=^(.*)/batcher$$
+      - traefik.http.middlewares.batcher-redirectregex.redirectregex.replacement=$$1/batcher/
+      - traefik.http.middlewares.batcher-redirectregex.redirectregex.permanent=true
+      - traefik.http.middlewares.batcher-stripprefix.stripprefix.prefixes=/batcher,/batcher/
+      # - traefik.http.middlewares.batcher-stripprefix.stripprefix.forceSlash=true
+      - traefik.http.middlewares.batcher-auth.basicauth.users=<username:bcrypt>
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=cyphernodeappsnet
+
+        - traefik.http.routers.batcher.rule=PathPrefix(`/batcher`)
+        - traefik.http.routers.batcher.entrypoints=websecure
+        - traefik.http.routers.batcher.tls=true
+        - traefik.http.routers.batcher.service=batcher
+        - traefik.http.routers.batcher.middlewares=batcher-redirectregex@docker,batcher-stripprefix@docker,batcher-auth@docker
+
+        # - traefik.http.routers.batcher-onion.rule=PathPrefix(`/batcher`)
+        # - traefik.http.routers.batcher-onion.entrypoints=onion
+        # - traefik.http.routers.batcher-onion.service=batcher
+        # - traefik.http.routers.batcher-onion.middlewares=batcher-redirectregex@docker,batcher-stripprefix@docker,batcher-auth@docker
+
+        - traefik.http.services.batcher.loadbalancer.server.port=8000
+        - traefik.http.services.batcher.loadbalancer.passHostHeader=true
+
+        - traefik.http.middlewares.batcher-redirectregex.redirectregex.regex=^(.*)/batcher$$
+        - traefik.http.middlewares.batcher-redirectregex.redirectregex.replacement=$$1/batcher/
+        - traefik.http.middlewares.batcher-redirectregex.redirectregex.permanent=true
+        - traefik.http.middlewares.batcher-stripprefix.stripprefix.prefixes=/batcher,/batcher/
+        # - traefik.http.middlewares.batcher-stripprefix.stripprefix.forceSlash=true
+        - traefik.http.middlewares.batcher-auth.basicauth.users=<username:bcrypt>
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.io.cyphernode == true
+      restart_policy:
+        delay: 1s
+      update_config:
+        parallelism: 1
 networks:
   cyphernodeappsnet:
     external: true
