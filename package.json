@@ -26,14 +26,14 @@
     "async-lock": "^1.2.4",
     "axios": "^0.26.1",
     "better-sqlite3": "^11.0.0",
-    "express": "^4.17.1",
+    "express": "^5.1.0",
     "http-status-codes": "^2.2.0",
     "reflect-metadata": "^0.2.2",
     "tslog": "^3.2.0",
     "typeorm": "^0.3.4"
   },
   "devDependencies": {
-    "@types/express": "^4.17.6",
+    "@types/express": "^5.0.3",
     "@types/node": "^20.5.9",
     "@types/sqlite3": "^3.1.6",
     "@typescript-eslint/eslint-plugin": "^2.24.0",
